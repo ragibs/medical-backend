@@ -21,6 +21,9 @@ class Doctor(models.Model):
     bio = models.TextField()
     years_experience = models.IntegerField(null=False)
 
+    # def __str__(self) -> str:
+    #     return (f"User ID: {self.user.id} Name:{self.user.first_name} {self.user.last_name}")
+
 
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -29,6 +32,9 @@ class Patient(models.Model):
     city = models.CharField(max_length=50)
     state = models.CharField(max_length=50)
     zipcode = models.CharField(max_length=15)
+
+    # def __str__(self) -> str:
+    #     return (f"User ID: {self.user.id} Name:{self.user.first_name} {self.user.last_name}")
 
 
 class PatientDetails(models.Model):
@@ -39,14 +45,25 @@ class PatientDetails(models.Model):
     height = models.IntegerField(validators=[MinValueValidator(10) ,MaxValueValidator(500)])
     history = models.TextField()
 
+
 class Availability():
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     working_days = models.CharField(max_length=15)
     start_time = models.TimeField()
     end_time = models.TimeField()
 
+
 class Appointment(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     symptom_summary = models.TextField()
     booking_date = models.DateTimeField()
+
+
+# Test table for API delete after
+class TestUser(models.Model):
+    name = models.CharField(max_length=50)
+    age = models.IntegerField()
+
+    def __str__(self) -> str:
+        return (f"Name:{self.name} Age:{self.age}")
