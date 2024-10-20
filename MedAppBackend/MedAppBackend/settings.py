@@ -11,12 +11,12 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 import os
 
 # Loading Enviornment Variables
-env_path = os.path.join('..', '..', 'Virtual', '.env')
-load_dotenv(env_path)
+env_path = os.path.join('..', 'Virtual', '.env')
+secrets = dotenv_values(env_path)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,9 +83,9 @@ WSGI_APPLICATION = 'MedAppBackend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'medicalapp',
-        'USER': os.getenv('SQL_USERNAME'),
-        'PASSWORD': os.getenv('SQL_PASSWORD'),
+        'NAME': secrets['DB_NAME'],
+        'USER': secrets['SQL_USERNAME'],
+        'PASSWORD': secrets['SQL_PASSWORD'],
         'HOST': 'localhost',
         'PORT': '3306',
     }
