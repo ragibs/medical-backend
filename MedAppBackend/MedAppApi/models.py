@@ -5,6 +5,10 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 # Create your models here.
 
 # Sample Models
+# class Clinic(models.Model):
+#     name = models.CharField(max_length=50)
+#     address = models.CharField(max_length=50)
+
 class Doctor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE) #Look into this for auth can be used for hashed passwords
     # # Not needed if user line is kept
@@ -20,10 +24,14 @@ class Doctor(models.Model):
     zipcode = models.CharField(max_length=15)
     bio = models.TextField()
     years_experience = models.IntegerField(null=False)
+    # clinic = models.ManyToManyField(Clinic, related_name='doctors')
 
     # def __str__(self) -> str:
     #     return (f"User ID: {self.user.id} Name:{self.user.first_name} {self.user.last_name}")
 
+class AdminStaff(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=50)
 
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -32,9 +40,16 @@ class Patient(models.Model):
     city = models.CharField(max_length=50)
     state = models.CharField(max_length=50)
     zipcode = models.CharField(max_length=15)
+    appointments_booked = models.IntegerField(default=0)
 
     # def __str__(self) -> str:
     #     return (f"User ID: {self.user.id} Name:{self.user.first_name} {self.user.last_name}")
+
+class BasicPatient(Patient):
+    maximum_appointments = models.IntegerField(default=100)
+
+class ProPatient(Patient):
+    maximum_appointments = models.IntegerField(default=99999999)
 
 
 class PatientDetails(models.Model):
@@ -58,6 +73,17 @@ class Appointment(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     symptom_summary = models.TextField()
     booking_date = models.DateTimeField()
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=60.0)
+
+class Testimonials(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    testimonial = models.TextField()
+
+class SatisfactionRatings(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
+    rating = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)])
+
 
 
 # Test table for API delete after
