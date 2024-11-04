@@ -5,6 +5,49 @@ from rest_framework import status
 from .models import *
 from .serializers import *
 
+
+# Priority 1
+# Register Patient
+@api_view(['POST'])
+def register_patient(request):
+    pass
+
+# Login for all user types
+@api_view(['GET'])
+def login(request):
+    pass
+
+# Appointments
+@api_view(['POST'])
+def make_appointment(request):
+    pass
+
+@api_view(['GET'])
+def view_appointment(request):
+    pass
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def manage_appointment(request, pk):
+    pass
+
+@api_view(['GET'])
+def get_doctors(request):
+    pass
+
+
+@api_view(['GET'])
+def view_doctors_schedule(request):
+    pass
+
+
+
+# Priority 2
+
+
+
+# Nice to Haves
+
+
 # Create your views here.
 def home(request):
     return render(request, 'home.html', {})
