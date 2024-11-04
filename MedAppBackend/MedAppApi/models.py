@@ -73,13 +73,14 @@ class Appointment(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     symptom_summary = models.TextField()
     booking_date = models.DateTimeField()
-    cost = models.DecimalField(max_digits=10, decimal_places=2, default=60.0)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=60.00)
 
 class Testimonials(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     testimonial = models.TextField()
 
-class SatisfactionRatings(models.Model):
+
+class Ratings(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     rating = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)])
