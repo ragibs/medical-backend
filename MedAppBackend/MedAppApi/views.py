@@ -8,6 +8,90 @@ from .serializers import *
 # Create your views here.
 def home(request):
     return render(request, 'home.html', {})
+# Doctor
+@api_view(['POST'])
+def register_doctor(request):
+    pass
+
+@api_view(['GET'])
+def get_doctors(request):
+    pass
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def update_doctor(request, pk):
+    pass
+
+@api_view(['POST'])
+def update_availability(request):
+    pass
+
+# Patient
+@api_view(['POST'])
+def register_patient(request):
+    pass
+
+@api_view(['GET'])
+def get_patients(request):
+    pass
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def update_patient(request, pk):
+    pass
+
+# Admin Staff
+@api_view(['POST'])
+def register_admninstaff(request):
+    pass
+
+@api_view(['GET'])
+def get_adminstaff(request):
+    pass
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def update_adminstaff(request, pk):
+    pass
+
+# Appointments
+@api_view(['POST'])
+def make_appointment(request):
+    pass
+
+@api_view(['GET'])
+def view_appointment(request):
+    pass
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def manage_appointment(request, pk):
+    pass
+
+# Ratings
+@api_view(['POST'])
+def create_rating(request):
+    pass
+
+@api_view(['GET'])
+def view_rating(request):
+    pass
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def update_rating(request, pk):
+    pass
+
+# Testimonials
+@api_view(['POST'])
+def create_testimonial(request):
+    pass
+
+@api_view(['GET'])
+def view_testimonial(request):
+    pass
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def update_testimonial(request, pk):
+    pass
+
+
+
 
 # API views
 # @api_view(['GET'])
