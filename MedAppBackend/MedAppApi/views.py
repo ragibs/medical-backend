@@ -2,6 +2,8 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.authtoken.models import Token
+from dj_rest_auth.registration.views import RegisterView
 from .models import *
 from .serializers import *
 
@@ -11,6 +13,23 @@ from .serializers import *
 @api_view(['POST'])
 def register_patient(request):
     pass
+
+@api_view(['POST'])
+def register_patient_method(request):
+    serializer = AuthPatientRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save(request=request)
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'user_id': user.id,
+            'username': user.username
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class RegisterPatientClass(RegisterView):
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
 # Login for all user types
 @api_view(['GET'])
