@@ -1,8 +1,10 @@
 # Info https://www.django-rest-framework.org/tutorial/quickstart/
+# rest_auth: https://dj-rest-auth.readthedocs.io/en/latest/configuration.html
 
 from django.contrib.auth.models import Group, User
 from rest_framework import serializers
 from .models import *
+from dj_rest_auth.registration.serializers import RegisterSerializer
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -50,6 +52,52 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         user = user_serializer.save()
         patient = Patient.objects.create(user=user, **validated_data)
         return patient
+    
+
+class AuthPatientRegistrationSerializer(RegisterSerializer):
+    # User Information
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    # Patient Information
+    phone = serializers.CharField(max_length=15)
+    address = serializers.CharField(max_length=100)
+    city = serializers.CharField(max_length=50)
+    state = serializers.CharField(max_length=50)
+    zipcode = serializers.CharField(max_length=15)
+
+    def custom_signup(self, request, user):
+        # Alternative syntax for assigning default vals
+        # user.first_name = self.validated_data.get('first_name', '')
+        user.first_name = self.validated_data['first_name']
+        user.last_name = self.validated_data['last_name']
+        user.save()
+
+        patientobject_data = {
+            **self.validated_data,
+            'user': user,
+            'appointments_booked': 0
+        }
+
+        patientobject_data.pop('username')
+        patientobject_data.pop('email')
+        patientobject_data.pop('password1')
+        patientobject_data.pop('password2')
+        patientobject_data.pop('first_name')
+        patientobject_data.pop('last_name')
+        Patient.objects.create(**patientobject_data)
+
+        # Alternative Syntax for creating patient object:
+        # Patient.objects.create(
+        #     user=user,
+        #     phone=self.validated_data['phone'],
+        #     address=self.validated_data['address'],
+        #     city=self.validated_data['city'],
+        #     state=self.validated_data['state'],
+        #     zipcode=self.validated_data['zipcode'],
+        #     appointments_booked=0  # Default value for new registration
+        # )
+
+
 
 
 class AdminStaffRegistrationSerializer(serializers.ModelSerializer):
