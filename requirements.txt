@@ -3,5 +3,6 @@ mysql
 mysql-connector-python
 djangorestframework
 dj-rest-auth
+django-allauth
 djangorestframework-simplejwt
 python-dotenv
