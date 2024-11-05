@@ -6,13 +6,18 @@ from rest_framework.authtoken.models import Token
 from dj_rest_auth.registration.views import RegisterView
 from .models import *
 from .serializers import *
+from django.contrib.auth import authenticate
 
 
 # Priority 1
 # Register Patient
 @api_view(['POST'])
 def register_patient(request):
-    pass
+    serializer =PatientRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def register_patient_method(request):
@@ -34,29 +39,73 @@ class RegisterPatientClass(RegisterView):
 # Login for all user types
 @api_view(['GET'])
 def login(request):
-    pass
+    username = request.data.get('username')
+    password = request.data.get('password')
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+    return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    
 
 # Appointments
 @api_view(['POST'])
 def make_appointment(request):
-    pass
+    serializer = AppointmentSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 def view_appointment(request):
-    pass
+    appointments = Appointment.objects.all()
+    serializer = AppointmentSerializer(appointments, many=True)
+    return Response(serializer.data)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def manage_appointment(request, pk):
-    pass
+    try:
+        appointment = Appointment.objects.get(pk=pk)
+    except Appointment.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = AppointmentSerializer(appointment)
+        return Response(serializer.data)
+    
+    elif request.method == 'PUT':
+        serializer = AppointmentSerializer(appointment, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        appointment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET'])
 def get_doctors(request):
-    pass
+    doctors = Doctor.objects.all()
+    serializer = DoctorSerializer(doctors, many=True)
+    return Response(serializer.data)
 
 
 @api_view(['GET'])
 def view_doctors_schedule(request):
-    pass
+    doctor_id = request.query_params.get('doctor_id', None)
+    
+    if doctor_id:
+        try:
+            availabilities = Availability.objects.filter(doctor_id=doctor_id)
+        except Doctor.DoesNotExist:
+            return Response({"detail": "Doctor not found."}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        availabilities = Availability.objects.all()
+
+    serializer = AvailabilitySerializer(availabilities, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 

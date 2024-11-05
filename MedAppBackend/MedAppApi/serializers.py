@@ -138,21 +138,33 @@ class PatientDetailsSerializer(serializers.ModelSerializer):
 
 
 class AvailabilitySerializer(serializers.ModelSerializer):
+    doctor = serializers.StringRelatedField()
+
     class Meta:
         model = Availability
-        fields = '__all__'
+        fields = ['doctor', 'working_days', 'start_time', 'end_time']
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Availability
-        fields = '__all__'
+    doctor = serializers.StringRelatedField()
+    patient = serializers.StringRelatedField()
 
-
-class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Availability
-        fields = '__all__'
+        model = Appointment
+        fields = ['id', 'doctor', 'patient', 'symptom_summary', 'booking_date', 'cost']
+
+    def create(self, validated_data):
+        doctor_id = self.context['request'].data.get('doctor_id')
+        patient_id = self.context['request'].data.get('patient_id')
+        doctor = Doctor.objects.get(id=doctor_id)
+        patient = Patient.objects.get(id=patient_id)
+        appointment = Appointment.objects.create(doctor=doctor, patient=patient, **validated_data)
+        return appointment
+    
+class DoctorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Doctor
+        fields = ['id', 'user', 'specialization', 'years_experience', 'phone', 'address', 'city', 'state', 'zipcode', 'bio']
 
 
 class TestimonialsSerializer(serializers.ModelSerializer):
