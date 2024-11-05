@@ -1,0 +1,7 @@
+django
+mysql
+mysql-connector-python
+djangorestframework
+dj-rest-auth
+djangorestframework-simplejwt
+python-dotenv
