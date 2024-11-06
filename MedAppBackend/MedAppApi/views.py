@@ -30,6 +30,65 @@ def register_patient_method(request):
 class RegisterPatientClass(RegisterView):
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
+    
+# Register doctors
+@api_view(['POST'])
+def register_doctor(request):
+    serializer = AuthDoctorRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save(request=request)
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'user_id': user.id,
+            'username': user.username
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+# Register Admin
+@api_view(['POST'])
+def register_adminstaff(request):
+    serializer = AuthAdminStaffRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save(request=request)
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'user_id': user.id,
+            'username': user.username
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['POST'])
+def make_appointment(request):
+    if not request.user.is_authenticated:
+        return Response('Must be logged in', status=status.HTTP_401_UNAUTHORIZED)
+    try:
+        patient = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        return Response('Not a valid patient', status=status.HTTP_400_BAD_REQUEST)
+    
+    doctor_id = request.data.get('doctor_id')
+    booking_date = request.data.get('booking_date')
+
+    if not doctor_id or booking_date:
+        return Response('Insufficient information', status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        return Response('Invalid doctor ID', status=status.HTTP_404_NOT_FOUND)
+    
+    appointment = Appointment.objects.create(
+        doctor=doctor,
+        patient=patient,
+        symptom_summary ='jibberish',
+        booking_date=booking_date
+    )
+
+    serializer = AppointmentSerializer(appointment)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 # Login for all user types
 @api_view(['GET'])
@@ -37,9 +96,7 @@ def login(request):
     pass
 
 # Appointments
-@api_view(['POST'])
-def make_appointment(request):
-    pass
+
 
 @api_view(['GET'])
 def view_appointment(request):
@@ -70,10 +127,6 @@ def view_doctors_schedule(request):
 # Create your views here.
 def home(request):
     return render(request, 'home.html', {})
-# Doctor
-@api_view(['POST'])
-def register_doctor(request):
-    pass
 
 @api_view(['GET'])
 def get_doctors(request):
@@ -101,9 +154,6 @@ def update_patient(request, pk):
     pass
 
 # Admin Staff
-@api_view(['POST'])
-def register_admninstaff(request):
-    pass
 
 @api_view(['GET'])
 def get_adminstaff(request):

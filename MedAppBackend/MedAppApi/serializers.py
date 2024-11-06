@@ -98,6 +98,53 @@ class AuthPatientRegistrationSerializer(RegisterSerializer):
         # )
 
 
+class AuthDoctorRegistrationSerializer(RegisterSerializer):
+    # User Information
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    # Doctor Information
+    phone = serializers.CharField(max_length=15)
+    specialization = serializers.CharField(max_length=100)
+    address = serializers.CharField(max_length=100)
+    city = serializers.CharField(max_length=50)
+    state = serializers.CharField(max_length=50)
+    zipcode = serializers.CharField(max_length=15)
+    bio = serializers.CharField()
+    years_experience = serializers.IntegerField()
+
+    def custom_signup(self, request, user):
+        user.first_name = self.validated_data['first_name']
+        user.last_name = self.validated_data['last_name']
+        user.save()
+
+        Doctor.objects.create(
+            user=user,
+            phone=self.validated_data['phone'],
+            specialization=self.validated_data['specialization'],
+            address=self.validated_data['address'],
+            city=self.validated_data['city'],
+            state=self.validated_data['state'],
+            zipcode=self.validated_data['zipcode'],
+            bio=self.validated_data['bio'],
+            years_experience=self.validated_data['years_experience'],  
+        )
+
+class AuthAdminStaffRegistrationSerializer(RegisterSerializer):
+    # User Information
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    # Staff Information
+    title = serializers.CharField(max_length=50)
+
+    def custom_signup(self, request, user):
+        user.first_name = self.validated_data['first_name']
+        user.last_name = self.validated_data['last_name']
+        user.save()
+
+        AdminStaff.objects.create(
+            user=user,
+            title=self.validated_data['title'], 
+        )
 
 
 class AdminStaffRegistrationSerializer(serializers.ModelSerializer):
@@ -145,14 +192,9 @@ class AvailabilitySerializer(serializers.ModelSerializer):
 
 class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Availability
+        model = Appointment
         fields = '__all__'
-
-
-class AppointmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Availability
-        fields = '__all__'
+        
 
 
 class TestimonialsSerializer(serializers.ModelSerializer):
