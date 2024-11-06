@@ -13,5 +13,5 @@ urlpatterns = [
     path('dj-rest-auth/', include('dj_rest_auth.urls')),
     path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
     path('register/patient/method', register_patient_method, name='register_patient_method'),
-    path('register/patient/class', RegisterPatientClass.as_view(), name='register_patient_class')
-]
+    path('register/patient/class', RegisterPatientClass.as_view(), name='register_patient_class'),
+    ]

@@ -6,3 +6,6 @@ dj-rest-auth
 django-allauth
 djangorestframework-simplejwt
 python-dotenv
+pytest
+pytest-django
+request
