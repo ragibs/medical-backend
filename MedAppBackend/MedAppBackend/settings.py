@@ -15,7 +15,8 @@ from dotenv import dotenv_values
 import os
 
 # Loading Enviornment Variables
-env_path = os.path.join('..', 'Virtual', '.env')
+# this line indicates the .env file is found in a folder named 'Virtual' that is one directory up from where your script is running.
+env_path = os.path.join('..', 'Virtual', '.env') # this line indicates the .env file is found in a folder named 'Virtual' that is one directory up from where your script is running.
 secrets = dotenv_values(env_path)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
