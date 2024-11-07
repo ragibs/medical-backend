@@ -1,27 +1,46 @@
-from django.shortcuts import render
 from rest_framework.decorators import api_view
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.authtoken.models import Token
+from dj_rest_auth.views import LoginView
 from dj_rest_auth.registration.views import RegisterView
+from rest_framework.response import Response
+from rest_framework import status
 from .models import *
 from .serializers import *
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from datetime import datetime, timedelta, time
 
+# Custom Login View
+class CustomLoginView(LoginView):
+    def get_response(self):
+        original_response = super().get_response()
+        user = self.user  # The user who just logged in
 
-# Priority 1
-# Register Patient
+        try:
+            user_profile = UserProfile.objects.get(user=user)
+            role = user_profile.role
+        except UserProfile.DoesNotExist:
+            role = None
+
+        # Add custom data to the response
+        original_response.data.update({
+            "role": role,
+            # Add any other custom fields you want to include here
+        })
+
+        return original_response
+
+# 🔴 Pateint Views 🔴
+# 1️⃣ Add Paitent/ Register Paitent
 @api_view(['POST'])
 def register_patient(request):
-    pass
-
-@api_view(['POST'])
-def register_patient_method(request):
     serializer = AuthPatientRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save(request=request)
-        token, _ = Token.objects.get_or_create(user=user)
         return Response({
-            'token': token.key,
+            'message': f'User {user.username} created successfully. Please try logging in with your username and password.',
             'user_id': user.id,
             'username': user.username
         }, status=status.HTTP_201_CREATED)
@@ -31,167 +50,144 @@ class RegisterPatientClass(RegisterView):
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
-# Login for all user types
-@api_view(['GET'])
-def login(request):
-    pass
+# 2️⃣ Get a single paitent
+# 3️⃣ Get all paitents - make sure to check the role of the auth, only admins should have acess
 
-# Appointments
+    
+# 🔵 Doctor Views 🔵
+# 1️⃣ Add Doctor/ Register Doctor, can only done by admin. Make sure to check role
 @api_view(['POST'])
-def make_appointment(request):
-    pass
-
-@api_view(['GET'])
-def view_appointment(request):
-    pass
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def manage_appointment(request, pk):
-    pass
-
-@api_view(['GET'])
-def get_doctors(request):
-    pass
-
-
-@api_view(['GET'])
-def view_doctors_schedule(request):
-    pass
-
-
-
-# Priority 2
-
-
-
-# Nice to Haves
-
-
-# Create your views here.
-def home(request):
-    return render(request, 'home.html', {})
-# Doctor
-@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def register_doctor(request):
-    pass
-
-@api_view(['GET'])
-def get_doctors(request):
-    pass
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def update_doctor(request, pk):
-    pass
-
-@api_view(['POST'])
-def update_availability(request):
-    pass
-
-# Patient
-@api_view(['POST'])
-def register_patient(request):
-    pass
-
-@api_view(['GET'])
-def get_patients(request):
-    pass
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def update_patient(request, pk):
-    pass
-
-# Admin Staff
-@api_view(['POST'])
-def register_admninstaff(request):
-    pass
-
-@api_view(['GET'])
-def get_adminstaff(request):
-    pass
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def update_adminstaff(request, pk):
-    pass
-
-# Appointments
-@api_view(['POST'])
-def make_appointment(request):
-    pass
-
-@api_view(['GET'])
-def view_appointment(request):
-    pass
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def manage_appointment(request, pk):
-    pass
-
-# Ratings
-@api_view(['POST'])
-def create_rating(request):
-    pass
-
-@api_view(['GET'])
-def view_rating(request):
-    pass
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def update_rating(request, pk):
-    pass
-
-# Testimonials
-@api_view(['POST'])
-def create_testimonial(request):
-    pass
-
-@api_view(['GET'])
-def view_testimonial(request):
-    pass
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def update_testimonial(request, pk):
-    pass
-
-
-
-
-# API views
-# @api_view(['GET'])
-# def get_doctor(request):
-#     return Response(DoctorSerializer())
-
-@api_view(['GET'])
-def get_testusers(request):
-    users = TestUser.objects.all()
-    serializer = TestUserSerializer(users, many=True)
-    return Response(serializer.data)
-
-@api_view(['POST'])
-def create_testuser(request):
-    serializer = TestUserSerializer(data=request.data)
+    # Check if the authenticated user has an admin role
+    if not (hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'ADMIN'):
+        return Response('Only admins can register doctors', status=status.HTTP_403_FORBIDDEN)
+    
+    serializer = AuthDoctorRegistrationSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        user = serializer.save(request=request)
+        return Response({
+            'user_id': user.id,
+            'username': user.username
+        }, status=status.HTTP_201_CREATED)
+    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def update_testuser(request, pk):
+# 2️⃣Get a single doctor
+# 3️⃣ Get all doctors - can be done by only paitents and admins
+
+
+# 🟡 Admin Views 🟡
+# 1️⃣ Add Admin/ Register Admin - only can be done by admin
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def register_adminstaff(request):
+    # Check if the authenticated user has an admin role
+    if not (hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'ADMIN'):
+        return Response('Only admins can register admin staff', status=status.HTTP_403_FORBIDDEN)
+    
+    serializer = AuthAdminStaffRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save(request=request)
+        return Response({
+            'user_id': user.id,
+            'username': user.username
+        }, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ⚪️ Appointment Views ⚪️
+# Helper function to generate time slots
+def generate_time_slots(start_time, end_time, interval):
+    """Generate time slots within a range."""
+    slots = []
+    while start_time < end_time:
+        slots.append(start_time)
+        start_time = (datetime.combine(datetime.today(), start_time) + interval).time()
+    return slots
+
+# To get avaliable slots for each doctor to generate in the frontend forms
+@api_view(['GET'])
+def available_slots(request, doctor_id, date):
+    # Define working hours and interval
+    start_time = time(9, 0)  # Start at 9 AM
+    end_time = time(17, 0)   # End at 5 PM
+    interval = timedelta(minutes=30)
+
+    # Generate all possible slots for the day
+    all_slots = generate_time_slots(start_time, end_time, interval)
+
+    # Query booked appointments for the doctor on the given date
+    booked_appointments = Appointment.objects.filter(doctor_id=doctor_id, date=date)
+    booked_slots = [appointment.time for appointment in booked_appointments]
+
+    # Filter out booked slots
+    available_slots = [slot for slot in all_slots if slot not in booked_slots]
+
+    return Response({"available_slots": available_slots})
+
+# 1️⃣ Create Appointment - can only be done by admin/paitent
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def make_appointment(request):
+    # Check if the user is authenticated and has a role of either PATIENT or ADMIN
+    user = request.user
+    if hasattr(user, 'userprofile') and user.userprofile.role not in ['PATIENT', 'ADMIN']:
+        return Response('You do not have permission to make an appointment', status=status.HTTP_403_FORBIDDEN)
+    
+    # Retrieve patient record if the user is a patient
+    if user.userprofile.role == 'PATIENT':
+        try:
+            patient = Patient.objects.get(user=user)
+        except Patient.DoesNotExist:
+            return Response('Patient record not found', status=status.HTTP_400_BAD_REQUEST)
+    else:
+        # Admin can create an appointment for any patient, so `patient_id` should be provided
+        patient_id = request.data.get('patient_id')
+        if not patient_id:
+            return Response('Patient ID is required for admin to make an appointment', status=status.HTTP_400_BAD_REQUEST)
+        try:
+            patient = Patient.objects.get(id=patient_id)
+        except Patient.DoesNotExist:
+            return Response('Invalid patient ID', status=status.HTTP_404_NOT_FOUND)
+    
+    # Required fields from request data
+    doctor_id = request.data.get('doctor_id')
+    booking_date = request.data.get('booking_date')
+    booking_time = request.data.get('booking_time')
+    symptoms = request.data.get('symptoms', '')
+
+    if not doctor_id or not booking_date or not booking_time:
+        return Response('Doctor ID, booking date, and booking time are required', status=status.HTTP_400_BAD_REQUEST)
+
+    # Retrieve the doctor
     try:
-        user = TestUser.objects.get(pk=pk)
-    except TestUser.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    
-    if request.method == 'GET':
-        serializer = TestUserSerializer(user)
-        return Response(serializer.data)
-    
-    elif request.method == 'PUT':
-        serializer = TestUserSerializer(user, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    
-    elif request.method == 'DELETE':
-        user.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        doctor = Doctor.objects.get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        return Response('Invalid doctor ID', status=status.HTTP_404_NOT_FOUND)
+
+    # Check for existing appointment to prevent double-booking
+    if Appointment.objects.filter(doctor=doctor, date=booking_date, time=booking_time).exists():
+        return Response('This time slot is already booked for the selected doctor', status=status.HTTP_400_BAD_REQUEST)
+
+    # Create the appointment
+    appointment = Appointment.objects.create(
+        doctor=doctor,
+        patient=patient,
+        date=booking_date,
+        time=booking_time,
+        symptoms=symptoms,
+        ai_summarized_symptoms='jibberish'  # Replace with actual AI summary if implemented
+    )
+
+    # Serialize and return the response
+    serializer = AppointmentSerializer(appointment)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+# 2️⃣ Delete an Appointment - can be done by any role
+# 3️⃣ Update an Appointment - can be dony be patient and admin
+# 4️⃣ Get a Single Appointment 
+# 5️⃣ Get all appointments based on Doctor/Paitent ID - can be done by anyone
+
+
