@@ -243,3 +243,44 @@ def make_appointment(request):
 # 5️⃣ Get all appointments based on Doctor/Paitent ID - can be done by anyone
 
 
+# getting list of appointment for patient
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_appointments_for_patient(request, patient_id):
+    user = request.user
+    if hasattr(user, 'userprofile') and user.userprofile.role != 'PATIENT':
+        return Response('You do not have permission to view appointments', status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        patient = Patient.objects.get(id=patient_id)
+    except Patient.DoesNotExist:
+        return Response('Patient not found', status=status.HTTP_404_NOT_FOUND)
+
+    appointments = Appointment.objects.filter(patient=patient).order_by('date', 'time')
+    serializer = AppointmentSerializer(appointments, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Ensure the user is authenticated
+def view_all_appointments(request):
+    # Get the user profile to check their role
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        # Return a 403 response if no user profile is found
+        return Response({"detail": "User profile not found."}, status=status.HTTP_403_FORBIDDEN)
+
+    # Check if the user is an admin
+    if user_profile.role != 'ADMIN':
+        # Return a 403 Forbidden if the user is not an admin
+        return Response({"detail": "You do not have permission to view all appointments."}, status=status.HTTP_403_FORBIDDEN)
+
+    # Fetch all appointments from the database
+    appointments = Appointment.objects.all()
+
+    # Serialize the appointments data
+    serializer = AppointmentSerializer(appointments, many=True)
+
+    # Return the serialized data as JSON
+    return Response(serializer.data)
