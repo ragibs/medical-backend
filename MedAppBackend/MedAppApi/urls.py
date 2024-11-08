@@ -11,9 +11,14 @@ urlpatterns = [
     path('register/patient/', register_patient, name='register_patient'),
     path('register/doctor/', register_doctor, name='register_doctor'),
     path('register/adminstaff/', register_adminstaff, name='register_adminstaff'),
+
+    # Patient endpoint
+    path('getpatient/<int:patient_id>', get_patient, name='get_patient'),
+    path('getpatients/', list_patients, name='list_patients'),
     
     #Doctor endpoint
     path('getdoctors/', list_doctors, name='list_doctors'),
+    path('getdoctor/<int:doctor_id>', get_doctor, name='get_doctor'),
 
     # Appointment endpoint
     path('make/appointment/', make_appointment, name='make_appointment'),

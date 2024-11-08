@@ -51,8 +51,28 @@ class RegisterPatientClass(RegisterView):
         return super().create(request, *args, **kwargs)
 
 # 2️⃣ Get a single paitent
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_patient(request, patient_id):
+    try:
+        patient = Patient.objects.get(id=patient_id)
+        serializer = PatientSerializer(patient)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Patient.DoesNotExist:
+        return Response(serializer.error_messages, status=status.HTTP_404_NOT_FOUND)
+    
 # 3️⃣ Get all paitents - make sure to check the role of the auth, only admins should have acess
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_patients(request):
+    if not (hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'ADMIN'):
+        return Response('Only admins can get a list of all patients', status=status.HTTP_403_FORBIDDEN)
+    try:
+        patients = Patient.objects.all()
+        serializer = PatientSerializer(patients, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except:
+        return Response('No Patients Registered yet', status=status.HTTP_404_NOT_FOUND)
     
 # 🔵 Doctor Views 🔵
 # 1️⃣ Add Doctor/ Register Doctor, can only done by admin. Make sure to check role
@@ -74,7 +94,15 @@ def register_doctor(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 2️⃣Get a single doctor - use it with doctor ID
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_doctor(request, doctor_id):
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+        serializer = DoctorListSerializer(doctor)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Doctor.DoesNotExist:
+        return Response(serializer.error_messages, status=status.HTTP_404_NOT_FOUND)
 
 # 3️⃣ Get all doctors - can be done by only paitents and admins
 @api_view(['GET'])
