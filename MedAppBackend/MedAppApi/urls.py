@@ -1,5 +1,4 @@
 from django.urls import path, include
-from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 from .views import *
 
@@ -13,7 +12,11 @@ urlpatterns = [
     path('register/doctor/', register_doctor, name='register_doctor'),
     path('register/adminstaff/', register_adminstaff, name='register_adminstaff'),
     
+    #Doctor endpoint
+    path('getdoctors/', list_doctors, name='list_doctors'),
+
     # Appointment endpoint
     path('make/appointment/', make_appointment, name='make_appointment'),
+    path('doctors/<int:doctor_id>/available-slots/<str:date>/', available_slots, name='available_slots')
 
 ]

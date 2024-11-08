@@ -73,8 +73,16 @@ def register_doctor(request):
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# 2️⃣Get a single doctor
+# 2️⃣Get a single doctor - use it with doctor ID
+
+
 # 3️⃣ Get all doctors - can be done by only paitents and admins
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_doctors(request):
+    doctors = Doctor.objects.all()
+    serializer = DoctorListSerializer(doctors, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # 🟡 Admin Views 🟡
@@ -108,6 +116,16 @@ def generate_time_slots(start_time, end_time, interval):
     return slots
 
 # To get avaliable slots for each doctor to generate in the frontend forms
+def generate_time_slots(start_time, end_time, interval):
+    """Generate all possible 30-minute time slots between start and end times."""
+    slots = []
+    current_time = datetime.combine(datetime.today(), start_time)
+    end_datetime = datetime.combine(datetime.today(), end_time)
+    while current_time < end_datetime:
+        slots.append(current_time.time())
+        current_time += interval
+    return slots
+
 @api_view(['GET'])
 def available_slots(request, doctor_id, date):
     # Define working hours and interval
@@ -118,14 +136,20 @@ def available_slots(request, doctor_id, date):
     # Generate all possible slots for the day
     all_slots = generate_time_slots(start_time, end_time, interval)
 
+    # Convert the date from string to a datetime object
+    try:
+        appointment_date = datetime.strptime(date, '%Y-%m-%d').date()
+    except ValueError:
+        return Response({"error": "Invalid date format. Use YYYY-MM-DD."}, status=400)
+
     # Query booked appointments for the doctor on the given date
-    booked_appointments = Appointment.objects.filter(doctor_id=doctor_id, date=date)
+    booked_appointments = Appointment.objects.filter(doctor_id=doctor_id, date=appointment_date)
     booked_slots = [appointment.time for appointment in booked_appointments]
 
     # Filter out booked slots
-    available_slots = [slot for slot in all_slots if slot not in booked_slots]
+    available_slots = [slot.strftime("%H:%M") for slot in all_slots if slot not in booked_slots]
 
-    return Response({"available_slots": available_slots})
+    return Response({"available_slots": available_slots}, status=200)
 
 # 1️⃣ Create Appointment - can only be done by admin/paitent
 @api_view(['POST'])

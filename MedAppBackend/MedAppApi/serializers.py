@@ -6,6 +6,7 @@ from rest_framework import serializers
 from .models import *
 from dj_rest_auth.registration.serializers import RegisterSerializer
 
+#PaitentAuth
 class AuthPatientRegistrationSerializer(RegisterSerializer):
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
@@ -46,9 +47,7 @@ class AuthPatientRegistrationSerializer(RegisterSerializer):
             zipcode=self.validated_data['zipcode'],
             date_of_birth=self.validated_data['date_of_birth'],
         )
-
-
-
+# Doctor Auth
 class AuthDoctorRegistrationSerializer(RegisterSerializer):
     # User Information
     first_name = serializers.CharField(required=True)
@@ -109,8 +108,7 @@ class AuthAdminStaffRegistrationSerializer(RegisterSerializer):
             user=user,
             title=self.validated_data['title'],
         )
-
-
+#Creating Appointment 
 class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
@@ -137,3 +135,14 @@ class AppointmentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This time slot is already booked for the selected doctor.")
 
         return data
+    
+ # Getting the list of all doctors   
+class DoctorListSerializer(serializers.ModelSerializer):
+    # fecthing from the user model
+    id = serializers.IntegerField(source='user.id', read_only=True)
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
+
+    class Meta:
+        model = Doctor
+        fields = ['id', 'first_name', 'last_name', 'short_bio', 'bio']
