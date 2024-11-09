@@ -11,6 +11,9 @@ from .serializers import *
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime, timedelta, time
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.conf import settings
 
 # Custom Login View
 class CustomLoginView(LoginView):
@@ -32,6 +35,39 @@ class CustomLoginView(LoginView):
 
         return original_response
 
+# Send email function
+def send_email(user):
+    # # Basic Plain Text
+    # send_mail(
+    #     subject='Welcome to Medical!',
+    #     message='Thank you for joining our platform.',
+    #     from_email=settings.DEFAULT_FROM_EMAIL,
+    #     recipient_list=[user.email],
+    #     fail_silently=True
+    # )
+
+    # Custom for rendering HTML store items configured to store under email/ images or templates
+    subject='Welcome to Medical!'
+    context = {
+        'first_name':user.first_name,
+    }
+    text = render_to_string('welcome_email.txt', context=context)
+    # html = render_to_string('welcome_email.html', context=context)
+    message = EmailMultiAlternatives(
+        subject=subject,
+        body=text,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[user.email]
+    )
+
+    # message.attach_alternative(html, 'text/html')
+
+    # # Load picture from email/images and attach to message object
+    # message.attach(image)
+
+    message.send()
+
+
 # 🔴 Pateint Views 🔴
 # 1️⃣ Add Paitent/ Register Paitent
 @api_view(['POST'])
@@ -39,6 +75,7 @@ def register_patient(request):
     serializer = AuthPatientRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save(request=request)
+        send_email(user)
         return Response({
             'message': f'User {user.username} created successfully. Please try logging in with your username and password.',
             'user_id': user.id,
