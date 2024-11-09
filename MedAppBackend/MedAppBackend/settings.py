@@ -13,9 +13,12 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from dotenv import dotenv_values
 import os
+from datetime import timedelta
+
 
 # Loading Enviornment Variables
-env_path = os.path.join('..', 'Virtual', '.env')
+# this line indicates the .env file is found in a folder named 'Virtual' that is one directory up from where your script is running.
+env_path = os.path.join('..', 'Virtual', '.env') # this line indicates the .env file is found in a folder named 'Virtual' that is one directory up from where your script is running.
 secrets = dotenv_values(env_path)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -51,6 +54,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'dj_rest_auth.registration',
     'MedAppApi',
+    'corsheaders'
 ]
 
 SITE_ID = 1
@@ -64,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'MedAppBackend.urls'
@@ -145,8 +150,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_AUTH = {
     'USE_JWT': True,
-    'JWT_AUTH_COOKIE': 'medappapi_cookie',
-    'JWT_AUTH_REFRESH_COOKIE': 'medappapi_refresh_cookie',
+    'JWT_AUTH_COOKIE': 'medappapi_access_token',  
 }
 
 REST_FRAMEWORK = {
@@ -154,3 +158,11 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  
+}
+
+#CORS settings to allow localhost connection
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_HEADERS = True

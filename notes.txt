@@ -6,4 +6,6 @@ cd MedAppBackend/
 python dbcreation.py -> Only once to make a db make sure you make a .env file with your information first. I placed mine in the Virtual folder
 python manage.py makemigrations
 python manage.py migrate
+python doctor_creation.py 
+python patient_creation.py
 python manage.py runserver 8000 -> The 8000 is optional since the settings.py already specify port 8K
