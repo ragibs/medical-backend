@@ -158,21 +158,54 @@ class PatientSerializer(serializers.ModelSerializer):
         model = Patient
         fields = ['id', 'first_name', 'last_name', 'phone', 'address']
 
-class ListAppointmentSerializer(serializers.ModelSerializer):
-    patient_first_name = serializers.CharField(source='patient.user.first_name', read_only=True)
-    patient_last_name = serializers.CharField(source='patient.user.last_name', read_only=True)
-    doctor_first_name = serializers.CharField(source='doctor.user.first_name', read_only=True)
-    doctor_last_name = serializers.CharField(source='doctor.user.last_name', read_only=True)
-
+class ListPatientAppointmentSerializer(serializers.ModelSerializer):
+    doctor_full_name = serializers.SerializerMethodField()
     class Meta:
         model = Appointment
         fields = [
-            'patient_first_name',
-            'patient_last_name',
-            'doctor_first_name',
-            'doctor_last_name',
+            'doctor_full_name',
+            'date',
+            'time',
+        ]
+
+    def get_doctor_full_name(self, obj):
+        return f"{obj.doctor.user.first_name} {obj.doctor.user.last_name}"
+
+class ListDoctorAppointmentSerializer(serializers.ModelSerializer):
+    patient_full_name = serializers.SerializerMethodField()
+    class Meta:
+        model = Appointment
+        fields = [
+            'patient_full_name',
             'date',
             'time',
             'ai_summarized_symptoms',
         ]
-        read_only_fields = ['ai_summarized_symptoms']
+    def get_patient_full_name(self, obj):
+        return f"{obj.patient.user.first_name} {obj.patient.user.last_name}"
+
+class ListAllAppointmentSerializer(serializers.ModelSerializer):
+    patient_full_name = serializers.SerializerMethodField()
+    doctor_full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Appointment
+        fields = [
+            'patient_full_name',
+            'doctor_full_name',
+            'date',
+            'time',
+            'ai_summarized_symptoms',
+        ]
+    def get_patient_full_name(self, obj):
+        # Check if patient and user are available
+        if obj.patient and obj.patient.user:
+            return f"{obj.patient.user.first_name} {obj.patient.user.last_name}"
+        return "Unknown Patient"
+
+    def get_doctor_full_name(self, obj):
+        # Check if doctor and user are available
+        if obj.doctor and obj.doctor.user:
+            return f"{obj.doctor.user.first_name} {obj.doctor.user.last_name}"
+        return "Unknown Doctor"
+    

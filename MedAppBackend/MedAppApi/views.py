@@ -208,7 +208,8 @@ def make_appointment(request):
     doctor_id = request.data.get('doctor_id')
     booking_date = request.data.get('booking_date')
     booking_time = request.data.get('booking_time')
-    symptoms = request.data.get('symptoms', '')
+    symptoms = request.data.get('symptoms')
+    ai_symptoms = request.data.get('ai_summarized_symptoms')
 
     if not doctor_id or not booking_date or not booking_time:
         return Response('Doctor ID, booking date, and booking time are required', status=status.HTTP_400_BAD_REQUEST)
@@ -230,7 +231,7 @@ def make_appointment(request):
         date=booking_date,
         time=booking_time,
         symptoms=symptoms,
-        ai_summarized_symptoms='jibberish'  # Replace with actual AI summary if implemented
+        ai_summarized_symptoms=ai_symptoms  # Replace with actual AI summary if implemented
     )
 
     # Serialize and return the response
@@ -270,56 +271,41 @@ def delete_appointment(request, appointment_id):
 # getting list of appointment for patient
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_appointments_for_patient(request, patient_id):
-    user = request.user
-
-    # Ensure that the user is a patient or an admin
-    if hasattr(user, 'userprofile') and user.userprofile.role != 'ADMIN':
-        try:
-            patient = Patient.objects.get(user=user)
-            if patient.id != patient_id:
-                return Response('You can only view your own appointments', status=status.HTTP_403_FORBIDDEN)
-        except Patient.DoesNotExist:
-            return Response('Patient record not found', status=status.HTTP_400_BAD_REQUEST)
-    
-    # For admins, no need to check if patient_id matches the logged-in user
+def list_appointments_for_patient(request, user_id):
     try:
-        patient = Patient.objects.get(id=patient_id)
+        # Retrieve the Patient object based on the provided user_id
+        patient = Patient.objects.get(user__id=user_id)
     except Patient.DoesNotExist:
         return Response('Patient not found', status=status.HTTP_404_NOT_FOUND)
 
+    # Check if the logged-in user is an admin or the requested patient
+    if request.user != patient.user and (not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'ADMIN'):
+        return Response('You can only view your own appointments', status=status.HTTP_403_FORBIDDEN)
+
     # Get the appointments for the patient and order them by date and time
     appointments = Appointment.objects.filter(patient=patient).order_by('date', 'time')
-    serializer = AppointmentSerializer(appointments, many=True)
-
+    serializer = ListPatientAppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_appointments_for_doctor(request, doctor_id):
-    user = request.user
-
-    # Ensure that the user is a doctor or admin
-    if hasattr(user, 'userprofile') and user.userprofile.role != 'ADMIN':
-        try:
-            doctor = Doctor.objects.get(user=user)
-            if doctor.id != doctor_id:
-                return Response('You can only view your own appointments', status=status.HTTP_403_FORBIDDEN)
-        except Doctor.DoesNotExist:
-            return Response('Doctor record not found', status=status.HTTP_400_BAD_REQUEST)
-    
-    # For admins, no need to check if doctor_id matches the logged-in user
+def list_appointments_for_doctor(request, user_id):
     try:
-        doctor = Doctor.objects.get(id=doctor_id)
+        # Retrieve the Doctor object based on the provided user_id
+        doctor = Doctor.objects.get(user__id=user_id)
     except Doctor.DoesNotExist:
         return Response('Doctor not found', status=status.HTTP_404_NOT_FOUND)
 
+    # Check if the logged-in user is an admin or the requested doctor
+    if request.user != doctor.user and (not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'ADMIN'):
+        return Response('You can only view your own appointments', status=status.HTTP_403_FORBIDDEN)
+
     # Get the appointments for the doctor and order them by date and time
     appointments = Appointment.objects.filter(doctor=doctor).order_by('date', 'time')
-    serializer = AppointmentSerializer(appointments, many=True)
-
+    serializer = ListDoctorAppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
@@ -340,7 +326,7 @@ def view_all_appointments(request):
     appointments = Appointment.objects.all()
 
     # Serialize the appointments data
-    serializer = AppointmentSerializer(appointments, many=True)
+    serializer = ListAllAppointmentSerializer(appointments, many=True)
 
     # Return the serialized data as JSON
     return Response(serializer.data)
