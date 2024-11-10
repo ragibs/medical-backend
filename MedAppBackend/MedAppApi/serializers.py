@@ -157,3 +157,22 @@ class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = ['id', 'first_name', 'last_name', 'phone', 'address']
+
+class ListAppointmentSerializer(serializers.ModelSerializer):
+    patient_first_name = serializers.CharField(source='patient.user.first_name', read_only=True)
+    patient_last_name = serializers.CharField(source='patient.user.last_name', read_only=True)
+    doctor_first_name = serializers.CharField(source='doctor.user.first_name', read_only=True)
+    doctor_last_name = serializers.CharField(source='doctor.user.last_name', read_only=True)
+
+    class Meta:
+        model = Appointment
+        fields = [
+            'patient_first_name',
+            'patient_last_name',
+            'doctor_first_name',
+            'doctor_last_name',
+            'date',
+            'time',
+            'ai_summarized_symptoms',
+        ]
+        read_only_fields = ['ai_summarized_symptoms']
