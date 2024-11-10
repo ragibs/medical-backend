@@ -212,3 +212,35 @@ class ListAllAppointmentSerializer(serializers.ModelSerializer):
             return f"{obj.doctor.user.first_name} {obj.doctor.user.last_name}"
         return "Unknown Doctor"
     
+
+
+class AppointmentDetailSerializer(serializers.ModelSerializer):
+    patient_name = serializers.SerializerMethodField()
+    doctor_name = serializers.SerializerMethodField()
+    ai_summarized_symptoms = serializers.CharField(allow_blank=True)
+    notes = serializers.CharField(allow_blank=True)
+    created_at = serializers.DateTimeField()
+
+    class Meta:
+        model = Appointment
+        fields = ['patient_name', 
+                  'doctor_name', 
+                  'date', 
+                  'time', 
+                  'symptoms', 
+                  'ai_summarized_symptoms', 
+                  'notes', 
+                  'created_at']
+
+    def get_patient_name(self, obj):
+        # Check if patient and user are available
+        if obj.patient and obj.patient.user:
+            return f"{obj.patient.user.first_name} {obj.patient.user.last_name}"
+        return "Unknown Patient"
+
+    def get_doctor_name(self, obj):
+        # Check if doctor and user are available
+        if obj.doctor and obj.doctor.user:
+            return f"{obj.doctor.user.first_name} {obj.doctor.user.last_name}"
+        return "Unknown Doctor"
+    
