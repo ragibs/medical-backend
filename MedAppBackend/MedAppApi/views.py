@@ -263,6 +263,11 @@ def delete_appointment(request, appointment_id):
     if not has_permission_to_delete(request.user, appointment):
         return Response({"detail": "You do not have permission to delete this appointment."}, status=status.HTTP_403_FORBIDDEN)
 
+    # Delete the appointment
+    appointment.delete()
+    return Response({"detail": "Appointment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+
 # 3️⃣ Update an Appointment - can be dony be patient and admin
 # 4️⃣ Get a Single Appointment 
 # 5️⃣ Get all appointments based on Doctor/Paitent ID - can be done by anyone
