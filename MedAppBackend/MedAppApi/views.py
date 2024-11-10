@@ -351,13 +351,15 @@ def view_all_appointments(request):
 def add_appointment_notes(request, appointment_id):
     user = request.user
 
-    # Ensure the user is a doctor
-    if hasattr(user, 'userprofile') and user.userprofile.role != 'DOCTOR':
+    # Ensure the user is a doctor by checking the associated Doctor profile
+    try:
+        doctor = Doctor.objects.get(user=user)
+    except Doctor.DoesNotExist:
         return Response({'detail': 'Only doctors can add notes to appointments.'}, status=status.HTTP_403_FORBIDDEN)
 
     try:
         # Get the appointment where the logged-in doctor is the assigned doctor
-        appointment = Appointment.objects.get(id=appointment_id, doctor=user)
+        appointment = Appointment.objects.get(id=appointment_id, doctor=doctor)
     except Appointment.DoesNotExist:
         return Response({'detail': 'Appointment not found or you do not have permission to modify it.'}, status=status.HTTP_404_NOT_FOUND)
 

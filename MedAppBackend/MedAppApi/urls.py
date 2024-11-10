@@ -30,5 +30,4 @@ urlpatterns = [
     path('view/all-appointments/', views.view_all_appointments, name='view_all_appointments'),
     path('appointments/<int:appointment_id>/add-notes/', views.add_appointment_notes, name='add_appointment_notes'),
 
-
 ]
