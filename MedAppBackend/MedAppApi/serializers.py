@@ -163,6 +163,7 @@ class ListPatientAppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = [
+            'id',
             'doctor_full_name',
             'date',
             'time',
@@ -176,6 +177,7 @@ class ListDoctorAppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = [
+            'id',
             'patient_full_name',
             'date',
             'time',
@@ -191,6 +193,7 @@ class ListAllAppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
         fields = [
+            'id',
             'patient_full_name',
             'doctor_full_name',
             'date',
