@@ -363,3 +363,27 @@ def add_appointment_notes(request, appointment_id):
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_appointment_details(request, appointment_id):
+    user = request.user
+
+    try:
+        # Fetch the appointment by ID
+        appointment = Appointment.objects.get(id=appointment_id)
+    except Appointment.DoesNotExist:
+        return Response({'detail': 'Appointment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check user permissions (admin, or doctor)
+    if user.userprofile.role == 'ADMIN':
+        pass
+    elif user.userprofile.role == 'DOCTOR' and appointment.doctor.user == user:
+        pass
+    else:
+        return Response({'detail': 'You do not have permission to view this appointment.'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Serialize the appointment details
+    serializer = AppointmentDetailSerializer(appointment)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
