@@ -1,0 +1,15 @@
+Welcome to Medical, {{ first_name }}!
+
+Thank you for joining our platform. We're excited to have you with us and are committed to providing you with the best healthcare experience possible.
+
+As a member of Medical, you can:
+- Book appointments with trusted doctors.
+- Access your appointment history.
+- Skip Tedious wait times
+
+If you have any questions or need assistance, please don’t hesitate to reach out to our support team.
+
+We're here to support you on your health journey!
+
+Best regards,
+The MediCal Team
