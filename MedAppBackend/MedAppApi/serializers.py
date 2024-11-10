@@ -142,10 +142,11 @@ class DoctorListSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='user.id', read_only=True)
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
+    email = serializers.CharField(source='user.email')
 
     class Meta:
         model = Doctor
-        fields = ['id', 'first_name', 'last_name', 'short_bio', 'bio']
+        fields = ['id', 'first_name', 'last_name', 'short_bio', 'bio', 'email']
 
  # Getting the list of all doctors   
 class PatientSerializer(serializers.ModelSerializer):
