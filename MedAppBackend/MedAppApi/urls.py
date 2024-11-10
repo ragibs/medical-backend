@@ -23,8 +23,11 @@ urlpatterns = [
     # Appointment endpoint
     path('make/appointment/', make_appointment, name='make_appointment'),
     path('doctors/<int:doctor_id>/available-slots/<str:date>/', available_slots, name='available_slots'),
+    path('deleteappointment/<int:appointment_id>/', delete_appointment, name='delete_appointment'),
 
-    path('view/appointment/<int:patient_id>/', list_appointments_for_patient, name='list_appointments_for_patient'),
+    path('view/patient-appointment/<int:patient_id>/', list_appointments_for_patient, name='list_appointments_for_patient'),
+    path('view/doctor-appointment/<int:doctor_id>/', list_appointments_for_doctor, name='list_appointments_for_doctor'),
     path('view/all-appointments/', views.view_all_appointments, name='view_all_appointments'),
+
 
 ]

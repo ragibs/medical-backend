@@ -238,6 +238,30 @@ def make_appointment(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 # 2️⃣ Delete an Appointment - can be done by any role
+def has_permission_to_delete(user, appointment):
+    """Helper function to determine if a user has permission to delete an appointment."""
+    user_profile = UserProfile.objects.get(user=user)
+    if user_profile.role == 'PATIENT' and appointment.patient.user == user:
+        return True
+    elif user_profile.role == 'DOCTOR' and appointment.doctor.user == user:
+        return True
+    elif user_profile.role == 'ADMIN':
+        return True
+    return False
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_appointment(request, appointment_id):
+    try:
+        # Retrieve the appointment by ID
+        appointment = Appointment.objects.get(id=appointment_id)
+    except Appointment.DoesNotExist:
+        return Response({"detail": "Appointment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check if the user has permission to delete the appointment
+    if not has_permission_to_delete(request.user, appointment):
+        return Response({"detail": "You do not have permission to delete this appointment."}, status=status.HTTP_403_FORBIDDEN)
+
 # 3️⃣ Update an Appointment - can be dony be patient and admin
 # 4️⃣ Get a Single Appointment 
 # 5️⃣ Get all appointments based on Doctor/Paitent ID - can be done by anyone
@@ -248,18 +272,54 @@ def make_appointment(request):
 @permission_classes([IsAuthenticated])
 def list_appointments_for_patient(request, patient_id):
     user = request.user
-    if hasattr(user, 'userprofile') and user.userprofile.role != 'PATIENT':
-        return Response('You do not have permission to view appointments', status=status.HTTP_403_FORBIDDEN)
 
+    # Ensure that the user is a patient or an admin
+    if hasattr(user, 'userprofile') and user.userprofile.role != 'ADMIN':
+        try:
+            patient = Patient.objects.get(user=user)
+            if patient.id != patient_id:
+                return Response('You can only view your own appointments', status=status.HTTP_403_FORBIDDEN)
+        except Patient.DoesNotExist:
+            return Response('Patient record not found', status=status.HTTP_400_BAD_REQUEST)
+    
+    # For admins, no need to check if patient_id matches the logged-in user
     try:
         patient = Patient.objects.get(id=patient_id)
     except Patient.DoesNotExist:
         return Response('Patient not found', status=status.HTTP_404_NOT_FOUND)
 
+    # Get the appointments for the patient and order them by date and time
     appointments = Appointment.objects.filter(patient=patient).order_by('date', 'time')
     serializer = AppointmentSerializer(appointments, many=True)
+
     return Response(serializer.data)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_appointments_for_doctor(request, doctor_id):
+    user = request.user
+
+    # Ensure that the user is a doctor or admin
+    if hasattr(user, 'userprofile') and user.userprofile.role != 'ADMIN':
+        try:
+            doctor = Doctor.objects.get(user=user)
+            if doctor.id != doctor_id:
+                return Response('You can only view your own appointments', status=status.HTTP_403_FORBIDDEN)
+        except Doctor.DoesNotExist:
+            return Response('Doctor record not found', status=status.HTTP_400_BAD_REQUEST)
+    
+    # For admins, no need to check if doctor_id matches the logged-in user
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        return Response('Doctor not found', status=status.HTTP_404_NOT_FOUND)
+
+    # Get the appointments for the doctor and order them by date and time
+    appointments = Appointment.objects.filter(doctor=doctor).order_by('date', 'time')
+    serializer = AppointmentSerializer(appointments, many=True)
+
+    return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # Ensure the user is authenticated
@@ -284,3 +344,4 @@ def view_all_appointments(request):
 
     # Return the serialized data as JSON
     return Response(serializer.data)
+
