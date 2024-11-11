@@ -429,9 +429,10 @@ def monthly_appointment_variance(request):
         return Response('Only Admins have access to view this information', status=status.HTTP_403_FORBIDDEN)
     
     current_month_start = timezone.now().date().replace(day=1)
+    next_month_start = (current_month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
     last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
 
-    current_monthly_count = Appointment.objects.filter(date__gte=current_month_start).count()
+    current_monthly_count = Appointment.objects.filter(date__gte=current_month_start, date__lt=next_month_start).count()
     last_month_count  = Appointment.objects.filter(date__gte=last_month_start, date__lt=current_month_start).count()
 
     return Response({
