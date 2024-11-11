@@ -1,6 +1,4 @@
-# Info https://www.django-rest-framework.org/tutorial/quickstart/
-# rest_auth: https://dj-rest-auth.readthedocs.io/en/latest/configuration.html
-
+from datetime import datetime
 from django.contrib.auth.models import Group, User
 from rest_framework import serializers
 from .models import *
@@ -161,20 +159,29 @@ class PatientSerializer(serializers.ModelSerializer):
 
 class ListPatientAppointmentSerializer(serializers.ModelSerializer):
     doctor_full_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Appointment
         fields = [
             'id',
             'doctor_full_name',
             'date',
-            'time',
+            'time'
         ]
 
     def get_doctor_full_name(self, obj):
         return f"{obj.doctor.user.first_name} {obj.doctor.user.last_name}"
 
+    def to_representation(self, instance):
+
+        representation = super().to_representation(instance)
+        if 'time' in representation and representation['time']:
+            representation['time'] = datetime.strptime(representation['time'], "%H:%M:%S").strftime("%I:%M %p")
+        return representation
+
 class ListDoctorAppointmentSerializer(serializers.ModelSerializer):
     patient_full_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Appointment
         fields = [
@@ -184,8 +191,16 @@ class ListDoctorAppointmentSerializer(serializers.ModelSerializer):
             'time',
             'ai_summarized_symptoms',
         ]
+
     def get_patient_full_name(self, obj):
         return f"{obj.patient.user.first_name} {obj.patient.user.last_name}"
+
+    def to_representation(self, instance):
+
+        representation = super().to_representation(instance)
+        if 'time' in representation and representation['time']:
+            representation['time'] = datetime.strptime(representation['time'], "%H:%M:%S").strftime("%I:%M %p")
+        return representation
 
 class ListAllAppointmentSerializer(serializers.ModelSerializer):
     patient_full_name = serializers.SerializerMethodField()
@@ -201,6 +216,7 @@ class ListAllAppointmentSerializer(serializers.ModelSerializer):
             'time',
             'ai_summarized_symptoms',
         ]
+
     def get_patient_full_name(self, obj):
         # Check if patient and user are available
         if obj.patient and obj.patient.user:
@@ -212,6 +228,18 @@ class ListAllAppointmentSerializer(serializers.ModelSerializer):
         if obj.doctor and obj.doctor.user:
             return f"{obj.doctor.user.first_name} {obj.doctor.user.last_name}"
         return "Unknown Doctor"
+
+    def to_representation(self, instance):
+
+        representation = super().to_representation(instance)
+        if 'time' in representation and representation['time']:
+            try:
+                representation['time'] = datetime.strptime(
+                    representation['time'], "%H:%M:%S"
+                ).strftime("%I:%M %p")
+            except ValueError:
+                representation['time'] = "Invalid time format"
+        return representation
     
 
 
@@ -224,24 +252,38 @@ class AppointmentDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Appointment
-        fields = ['patient_name', 
-                  'doctor_name', 
-                  'date', 
-                  'time', 
-                  'symptoms', 
-                  'ai_summarized_symptoms', 
-                  'notes', 
-                  'created_at']
+        fields = [
+            'patient_name', 
+            'doctor_name', 
+            'date', 
+            'time', 
+            'symptoms', 
+            'ai_summarized_symptoms', 
+            'notes', 
+            'created_at'
+        ]
 
     def get_patient_name(self, obj):
-        # Check if patient and user are available
         if obj.patient and obj.patient.user:
             return f"{obj.patient.user.first_name} {obj.patient.user.last_name}"
         return "Unknown Patient"
 
     def get_doctor_name(self, obj):
-        # Check if doctor and user are available
         if obj.doctor and obj.doctor.user:
             return f"{obj.doctor.user.first_name} {obj.doctor.user.last_name}"
         return "Unknown Doctor"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        
+        # Format the 'time' field to "11:30 AM"
+        if 'time' in representation and representation['time']:
+            try:
+                representation['time'] = datetime.strptime(
+                    representation['time'], "%H:%M:%S"
+                ).strftime("%I:%M %p")
+            except ValueError:
+                representation['time'] = "Invalid Time"
+                
+        return representation
     

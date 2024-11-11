@@ -28,7 +28,7 @@ def generate_appointments(num_appointments=20):
         doctor = random.choice(doctors)
         
         # Generate random date within the next 30 days
-        appointment_date = date.today() + timedelta(days=random.randint(1, 30))
+        appointment_date = date.today() - timedelta(days=random.randint(1, 30))
         # Generate random time for the appointment between 9 AM to 5 PM
         appointment_time = time(hour=random.randint(9, 16), minute=random.choice([0, 30]))
 
