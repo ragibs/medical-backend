@@ -52,3 +52,13 @@ class Appointment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+class UserActionLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    action_type = models.CharField(max_length=50)
+    endpoint = models.CharField(max_length=200)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    status_code = models.IntegerField()
+    outcome = models.CharField(max_length=10)
+    details = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
