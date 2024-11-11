@@ -31,4 +31,7 @@ urlpatterns = [
     path('appointments/<int:appointment_id>/add-notes/', views.add_appointment_notes, name='add_appointment_notes'),
     path('appointments/<int:appointment_id>/', view_appointment_details, name='view_appointment_details'),
 
+    # Dashboard
+    path('dashboard/appointments-today/', todays_appointment_distribution, name='todays_appointment_distribution'),
+
 ]
