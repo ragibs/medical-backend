@@ -30,6 +30,8 @@ urlpatterns = [
     path('view/all-appointments/', views.view_all_appointments, name='view_all_appointments'),
     path('appointments/<int:appointment_id>/add-notes/', views.add_appointment_notes, name='add_appointment_notes'),
     path('appointments/<int:appointment_id>/', view_appointment_details, name='view_appointment_details'),
+
+    #dashboard
     path('appointment/changecount/', monthly_appointment_variance, name='monthly_appointment_variance'),
     path('appointment/countbydoctor/', appointments_by_doctor, name='appointments_by_doctor'),
     path('registrations/', total_patient_registrations, name='total_patient_registrations'),
