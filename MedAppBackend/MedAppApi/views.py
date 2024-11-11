@@ -467,3 +467,27 @@ def appointments_by_doctor(request):
     return Response(response)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def total_patient_registrations(request):
+    # Check if the user has an admin role
+    if not (hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'ADMIN'):
+        return Response('Only Admins have access to view this information', status=status.HTTP_403_FORBIDDEN)
+    
+    # Get the start of the current and last month
+    current_month_start = timezone.now().date().replace(day=1)
+    last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
+    last_month_end = current_month_start - timedelta(days=1)
+
+    # Count patients registered in the current month
+    current_month_patients = Patient.objects.filter(user__date_joined__gte=current_month_start).count()
+
+    # Count patients registered in the last month
+    last_month_patients = Patient.objects.filter(user__date_joined__gte=last_month_start, user__date_joined__lt=current_month_start).count()
+
+    # Return the data as a response
+    return Response({
+        'current_month': current_month_patients,
+        'last_month': last_month_patients,
+    })
+
