@@ -11,6 +11,7 @@ from .serializers import *
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime, timedelta, time
+from django.utils import timezone
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -419,3 +420,25 @@ def view_appointment_details(request, appointment_id):
     serializer = AppointmentDetailSerializer(appointment)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+# Current and last months appointment counts based on appointment date
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def monthly_appointment_variance(request):
+    if not (hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'ADMIN'):
+        return Response('Only Admins have access to view this information', status=status.HTTP_403_FORBIDDEN)
+    
+    current_month_start = timezone.now().date().replace(day=1)
+    last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
+
+    current_monthly_count = Appointment.objects.filter(date__gte=current_month_start).count()
+    last_month_count  = Appointment.objects.filter(date__gte=last_month_start, date__lt=current_month_start).count()
+
+    return Response({
+        'current_month': current_monthly_count,
+        'last_month': last_month_count
+    })
+
+    
+
+
