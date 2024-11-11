@@ -32,5 +32,6 @@ urlpatterns = [
     path('appointments/<int:appointment_id>/', view_appointment_details, name='view_appointment_details'),
     path('appointment/changecount/', monthly_appointment_variance, name='monthly_appointment_variance'),
     path('appointment/countbydoctor/', appointments_by_doctor, name='appointments_by_doctor'),
+    path('registrations/', total_patient_registrations, name='total_patient_registrations'),
 
 ]
