@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.db.models import Count, F
 
 # Send email function
 def send_email(user):
@@ -440,6 +441,29 @@ def monthly_appointment_variance(request):
         'last_month': last_month_count
     })
 
+# Monthly appointment count for each doctor   
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def appointments_by_doctor(request):
+    if not (hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'ADMIN'):
+        return Response('Only Admins have access to view this information', status=status.HTTP_403_FORBIDDEN)
     
+    current_month_start = timezone.now().date().replace(day=1)
+    next_month_start = (current_month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+
+    doctors_appoitment_counts = Appointment.objects.filter(
+        date__gte=current_month_start,
+        date__lt=next_month_start
+    ).values(
+        first_name=F('doctor__user__first_name'),
+        last_name=F('doctor__user__last_name')
+    ).annotate(appointments=Count('id'))
+
+    response = [
+        {"doctor": f"{doctor['first_name']} {doctor['last_name']}",
+         "appointments": doctor['appointments']}
+        for doctor in doctors_appoitment_counts]
+    
+    return Response(response)
 
 
