@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from django.db.models import Count, F
 
 # Send email function
 def send_email(user):
@@ -429,9 +430,10 @@ def monthly_appointment_variance(request):
         return Response('Only Admins have access to view this information', status=status.HTTP_403_FORBIDDEN)
     
     current_month_start = timezone.now().date().replace(day=1)
+    next_month_start = (current_month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
     last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
 
-    current_monthly_count = Appointment.objects.filter(date__gte=current_month_start).count()
+    current_monthly_count = Appointment.objects.filter(date__gte=current_month_start, date__lt=next_month_start).count()
     last_month_count  = Appointment.objects.filter(date__gte=last_month_start, date__lt=current_month_start).count()
 
     return Response({
@@ -439,31 +441,29 @@ def monthly_appointment_variance(request):
         'last_month': last_month_count
     })
 
-
+# Monthly appointment count for each doctor   
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def total_patient_registrations(request):
-    # Check if the user has an admin role
+def appointments_by_doctor(request):
     if not (hasattr(request.user, 'userprofile') and request.user.userprofile.role == 'ADMIN'):
         return Response('Only Admins have access to view this information', status=status.HTTP_403_FORBIDDEN)
     
-    # Get the start of the current and last month
     current_month_start = timezone.now().date().replace(day=1)
-    last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
-    last_month_end = current_month_start - timedelta(days=1)
+    next_month_start = (current_month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
 
-    # Count patients registered in the current month
-    current_month_patients = Patient.objects.filter(user__date_joined__gte=current_month_start).count()
+    doctors_appoitment_counts = Appointment.objects.filter(
+        date__gte=current_month_start,
+        date__lt=next_month_start
+    ).values(
+        first_name=F('doctor__user__first_name'),
+        last_name=F('doctor__user__last_name')
+    ).annotate(appointments=Count('id'))
 
-    # Count patients registered in the last month
-    last_month_patients = Patient.objects.filter(user__date_joined__gte=last_month_start, user__date_joined__lt=current_month_start).count()
-
-    # Return the data as a response
-    return Response({
-        'current_month': current_month_patients,
-        'last_month': last_month_patients,
-    })
-
+    response = [
+        {"doctor": f"{doctor['first_name']} {doctor['last_name']}",
+         "appointments": doctor['appointments']}
+        for doctor in doctors_appoitment_counts]
     
+    return Response(response)
 
 
