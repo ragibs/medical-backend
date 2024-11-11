@@ -491,3 +491,29 @@ def total_patient_registrations(request):
         'last_month': last_month_patients,
     })
 
+# Today's Appointment Time Distribution
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def todays_appointment_distribution(request):
+    # Check if the user has an admin role
+    user = request.user
+    if not hasattr(user, 'userprofile') or user.userprofile.role != 'ADMIN':
+        return Response({"error": "You do not have permission to access this view."}, status=status.HTTP_403_FORBIDDEN)
+    
+    today = datetime.today().date()
+    start_time = time(9, 0)
+    end_time = time(17, 0)
+    interval = timedelta(minutes=30)
+    
+    time_slots = generate_time_slots(start_time, end_time, interval)
+    distribution = []
+
+    for slot in time_slots:
+        next_slot = (datetime.combine(today, slot) + interval).time()
+        count = Appointment.objects.filter(date=today, time__gte=slot, time__lt=next_slot).count()
+        distribution.append({
+            "time": slot.strftime("%H:%M"),
+            "appointments": count
+        })
+
+    return Response(distribution)
