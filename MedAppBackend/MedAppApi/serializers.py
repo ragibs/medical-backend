@@ -147,10 +147,8 @@ class DoctorListSerializer(serializers.ModelSerializer):
         fields = ['id', 'first_name', 'last_name', 'short_bio', 'bio', 'email']
 
 class PatientSerializer(serializers.ModelSerializer):
-    # Use the Patient model's primary key as the id
     id = serializers.IntegerField(source='pk', read_only=True)
     
-    # Fetching details from the related User model
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
 
