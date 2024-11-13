@@ -1,3 +1,6 @@
+# This is a copy of the docker-compose.yaml file. It generally would be placed in the
+# root package folder and at the same directory level with the front-end and back-end folders
+# for deployment
 version: '3.8'
 services:
   frontend:
