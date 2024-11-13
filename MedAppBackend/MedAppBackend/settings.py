@@ -77,7 +77,6 @@ ROOT_URLCONF = 'MedAppBackend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
         'DIRS': [os.path.join(BASE_DIR, 'email/templates')],
         'APP_DIRS': True,
         

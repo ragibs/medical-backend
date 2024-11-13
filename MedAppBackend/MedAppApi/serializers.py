@@ -71,6 +71,7 @@ class AuthDoctorRegistrationSerializer(RegisterSerializer):
         UserProfile.objects.create(user=user, role='DOCTOR')
 
         # Create a Doctor instance
+        
         Doctor.objects.create(
             user=user,
             phone=self.validated_data['phone'],
@@ -151,10 +152,11 @@ class PatientSerializer(serializers.ModelSerializer):
     
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
 
     class Meta:
         model = Patient
-        fields = ['id', 'first_name', 'last_name', 'phone', 'address']
+        fields = ['id', 'first_name', 'last_name', 'phone', 'address', 'email']
 
 class ListPatientAppointmentSerializer(serializers.ModelSerializer):
     doctor_full_name = serializers.SerializerMethodField()

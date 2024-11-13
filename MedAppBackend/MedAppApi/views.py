@@ -65,7 +65,6 @@ def send_email(user):
 
 # POST Add Paitent/ Register Paitent
 @api_view(['POST'])
-@api_view(['POST'])
 def register_patient(request):
     """
     Register a new patient using the AuthPatientRegistrationSerializer.
