@@ -11,8 +11,6 @@ EMAIL_HOST_PASSWORD=********** # Replace with the password
 DJANGO_SETTINGS_MODULE=MedAppBackend.settings
 ```
 
-
-
 # Docker Deployment Instructions for MedApp (Locally)
 
 ## Prerequisites
@@ -63,13 +61,19 @@ docker-compose logs -f <service_name>
 ```bash
 docker-compose down --rmi all --volumes --remove-orphans
 ```
-
+## Access
+  - Access front-end application at http://localhost:3000/
+  - Access back-end application at http://localhost:8000/login/
+  - Access database at http://127.0.0.1:3307
+    - Enter the MYSQL_ROOT_PASSWORD you entered in the .env file as password to access the database through the mysqlworkbench or client
+  
 ## Additional Notes
 
 - **Database Persistence**: Ensure the db folder is properly mounted for data persistence.
     -  Add folder called 'db' to root and create an empty 'data' folder inside. 
 
-- **Environment Variables**: If you update the .env file, restart the containers using "docker-compose up --build" to apply changes.
+- **Environment Variables**: If you update the .env file, restart the containers using "docker-compose up" to apply changes.
+
 
 
 ## Images of Folder structure:
