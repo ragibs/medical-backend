@@ -23,3 +23,7 @@ requests==2.32.3
 requests-oauthlib==2.0.0
 sqlparse==0.5.1
 urllib3==2.2.3
+pytest==8.3.3
+pytest-django==4.9.0
+coverage==7.6.4
+factory-boy==3.3.10
