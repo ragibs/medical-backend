@@ -32,6 +32,7 @@ class CustomLoginView(LoginView):
         user = self.user 
 
         try:
+            #SQL Equivalent: SELECT `role` FROM `medicalapp`.`medappapi_userprofile` WHERE `user_id` = user.id;
             user_profile = UserProfile.objects.get(user=user)
             role = user_profile.role
         except UserProfile.DoesNotExist:
@@ -50,6 +51,7 @@ def send_email(user):
     Sends a welcome email to a newly registered user.
     """    
     subject='Welcome to Medical!'
+    #SQL Equivalent: SELECT `first_name` FROM `medicalapp`.`auth_user` WHERE `id` = user.id;
     context = {
         'first_name':user.first_name,
     }
@@ -58,6 +60,7 @@ def send_email(user):
         subject=subject,
         body=text,
         from_email=settings.DEFAULT_FROM_EMAIL,
+        # SQL Equivalent: SELECT `email` FROM `medicalapp`.`auth_user` WHERE `id` = user.id;
         to=[user.email]
     )
 
@@ -78,7 +81,9 @@ def register_patient(request):
         send_email(user)
 
         return Response({
+            # SQL Equivalent: SELECT `username` FROM `medicalapp`.`auth_user` WHERE `id` = user.id;
             'message': f'User {user.username} created successfully. Please try logging in with your username and password.',
+            # SQL Equivalent: SELECT `id` FROM `medicalapp`.`auth_user` WHERE `id` = user.id;
             'user_id': user.id,
             'username': user.username
         }, status=status.HTTP_201_CREATED)
@@ -101,6 +106,7 @@ def get_patient(request, patient_id):
         )
 
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_patient` WHERE `id` = patient_id;
         patient = Patient.objects.get(id=patient_id)
         serializer = PatientSerializer(patient)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -126,6 +132,7 @@ def list_patients(request):
         )
     
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_patient`;
         patients = Patient.objects.all()
 
         if not patients.exists():
@@ -171,6 +178,7 @@ def get_doctor(request, doctor_id):
     Retrieve a doctor's details by their ID. Accessible to authenticated users.
     """
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_doctor` WHERE `id` = doctor_id;
         doctor = Doctor.objects.get(id=doctor_id)
         serializer = DoctorListSerializer(doctor)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -184,6 +192,7 @@ def list_doctors(request):
     """
     Retrieve a list of all doctors. Access restricted to authenticated users.
     """
+    # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_doctor`;
     doctors = Doctor.objects.all()
     serializer = DoctorListSerializer(doctors, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -240,7 +249,7 @@ def available_slots(request, doctor_id, date):
         appointment_date = datetime.strptime(date, '%Y-%m-%d').date()
     except ValueError:
         return Response({"error": "Invalid date format. Use YYYY-MM-DD."}, status=400)
-
+    # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `doctor_id` = doctor_id AND `date` = 'appointment_date';
     booked_appointments = Appointment.objects.filter(doctor_id=doctor_id, date=appointment_date)
     booked_slots = [appointment.time for appointment in booked_appointments]
 
@@ -261,6 +270,7 @@ def make_appointment(request):
     
     if user.userprofile.role == 'PATIENT':
         try:
+            # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_patient` WHERE `user_id` = user_id;
             patient = Patient.objects.get(user=user)
         except Patient.DoesNotExist:
             return Response('Patient record not found', status=status.HTTP_400_BAD_REQUEST)
@@ -269,6 +279,7 @@ def make_appointment(request):
         if not patient_id:
             return Response('Patient ID is required for admin to make an appointment', status=status.HTTP_400_BAD_REQUEST)
         try:
+            # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_patient` WHERE `id` = patient_id;
             patient = Patient.objects.get(id=patient_id)
         except Patient.DoesNotExist:
             return Response('Invalid patient ID', status=status.HTTP_404_NOT_FOUND)
@@ -283,6 +294,7 @@ def make_appointment(request):
         return Response('Doctor ID, booking date, and booking time are required', status=status.HTTP_400_BAD_REQUEST)
 
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_doctor` WHERE `id` = doctor_id;
         doctor = Doctor.objects.get(id=doctor_id)
     except Doctor.DoesNotExist:
         return Response('Invalid doctor ID', status=status.HTTP_404_NOT_FOUND)
@@ -290,13 +302,16 @@ def make_appointment(request):
     if Appointment.objects.filter(doctor=doctor, date=booking_date, time=booking_time).exists():
         return Response('This time slot is already booked for the selected doctor', status=status.HTTP_400_BAD_REQUEST)
 
+    # SQL Equivalent:
+    # INSERT INTO `medicalapp`.`medappapi_appointment` (`doctor_id`, `patient_id`, `date`, `time`, `symptoms`, `ai_summarized_symptoms`) 
+    # VALUES (doctor_id, patient_id, 'booking_date', 'booking_time', 'symptoms', 'ai_symptoms');
     appointment = Appointment.objects.create(
         doctor=doctor,
         patient=patient,
         date=booking_date,
         time=booking_time,
         symptoms=symptoms,
-        ai_summarized_symptoms=ai_symptoms  # Replace with actual AI summary if implemented
+        ai_summarized_symptoms=ai_symptoms
     )
 
     serializer = AppointmentSerializer(appointment)
@@ -326,13 +341,15 @@ def delete_appointment(request, appointment_id):
     Only admins and doctors assigned to the appointment can delete it.
     """
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `id` = appointment_id;
         appointment = Appointment.objects.get(id=appointment_id)
     except Appointment.DoesNotExist:
         return Response({"detail": "Appointment not found."}, status=status.HTTP_404_NOT_FOUND)
 
     if not has_permission_to_delete(request.user, appointment):
         return Response({"detail": "You do not have permission to delete this appointment."}, status=status.HTTP_403_FORBIDDEN)
-
+    
+    # SQL Equivalent: DELETE FROM `medicalapp`.`medappapi_appointment` WHERE `id` = appointment_id;
     appointment.delete()
     return Response({"detail": "Appointment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
@@ -347,6 +364,7 @@ def list_appointments_for_patient(request, user_id):
     - Admins can access appointments for any patient.
     """
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_patient` WHERE `user_id` = user_id;
         patient = Patient.objects.get(user__id=user_id)
     except Patient.DoesNotExist:
         return Response('Patient not found', status=status.HTTP_404_NOT_FOUND)
@@ -354,6 +372,7 @@ def list_appointments_for_patient(request, user_id):
     if request.user != patient.user and (not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'ADMIN'):
         return Response('You can only view your own appointments', status=status.HTTP_403_FORBIDDEN)
 
+    # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `patient_id` = patient_id ORDER BY `date`, `time`;
     appointments = Appointment.objects.filter(patient=patient).order_by('date', 'time')
     serializer = ListPatientAppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
@@ -368,6 +387,7 @@ def list_appointments_for_doctor(request, user_id):
     - Admins can access appointments for any doctor.
     """
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_doctor` WHERE `user_id` = user_id;
         doctor = Doctor.objects.get(user__id=user_id)
     except Doctor.DoesNotExist:
         return Response('Doctor not found', status=status.HTTP_404_NOT_FOUND)
@@ -375,6 +395,7 @@ def list_appointments_for_doctor(request, user_id):
     if request.user != doctor.user and (not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'ADMIN'):
         return Response('You can only view your own appointments', status=status.HTTP_403_FORBIDDEN)
 
+    # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `doctor_id` = doctor_id ORDER BY `date`, `time`;
     appointments = Appointment.objects.filter(doctor=doctor).order_by('date', 'time')
     serializer = ListDoctorAppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
@@ -389,6 +410,7 @@ def view_all_appointments(request):
     """
 
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_userprofile` WHERE `user_id` = user_id;
         user_profile = UserProfile.objects.get(user=request.user)
     except UserProfile.DoesNotExist:
         return Response({"detail": "User profile not found."}, status=status.HTTP_403_FORBIDDEN)
@@ -396,6 +418,7 @@ def view_all_appointments(request):
     if user_profile.role != 'ADMIN':
         return Response({"detail": "You do not have permission to view all appointments."}, status=status.HTTP_403_FORBIDDEN)
 
+    # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment`;
     appointments = Appointment.objects.all()
 
     serializer = ListAllAppointmentSerializer(appointments, many=True)
@@ -412,11 +435,13 @@ def add_appointment_notes(request, appointment_id):
     user = request.user
 
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_doctor` WHERE `user_id` = user_id;
         doctor = Doctor.objects.get(user=user)
     except Doctor.DoesNotExist:
         return Response({'detail': 'Only doctors can add notes to appointments.'}, status=status.HTTP_403_FORBIDDEN)
 
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `id` = appointment_id AND `doctor_id` = doctor_id;
         appointment = Appointment.objects.get(id=appointment_id, doctor=doctor)
     except Appointment.DoesNotExist:
         return Response({'detail': 'Appointment not found or you do not have permission to modify it.'}, status=status.HTTP_404_NOT_FOUND)
@@ -440,6 +465,7 @@ def view_appointment_details(request, appointment_id):
     user = request.user
 
     try:
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `id` = appointment_id;
         appointment = Appointment.objects.get(id=appointment_id)
     except Appointment.DoesNotExist:
         return Response({'detail': 'Appointment not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -470,7 +496,9 @@ def monthly_appointment_variance(request):
     next_month_start = (current_month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
     last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
 
+    # SQL Equivalent: SELECT COUNT(*) FROM `medicalapp`.`medappapi_appointment` WHERE `date` >= current_month_start AND `date` < next_month_start;
     current_monthly_count = Appointment.objects.filter(date__gte=current_month_start, date__lt=next_month_start).count()
+    # SQL Equivalent: SELECT COUNT(*) FROM `medicalapp`.`medappapi_appointment` WHERE `date` >= last_month_start AND `date` < current_month_start;
     last_month_count  = Appointment.objects.filter(date__gte=last_month_start, date__lt=current_month_start).count()
 
     return Response({
@@ -492,6 +520,14 @@ def appointments_by_doctor(request):
     current_month_start = timezone.now().date().replace(day=1)
     next_month_start = (current_month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
 
+    # SQL Equivalent:
+    # SELECT `auth_user`.`first_name` AS `first_name`, `auth_user`.`last_name` AS `last_name`,
+    # COUNT(`medappapi_appointment`.`id`) AS `appointments`
+    # FROM `medicalapp`.`medappapi_appointment`
+    # JOIN `medicalapp`.`medappapi_doctor` ON `medappapi_appointment`.`doctor_id` = `medappapi_doctor`.`id`
+    # JOIN `medicalapp`.`auth_user` ON `medappapi_doctor`.`user_id` = `auth_user`.`id`
+    # WHERE `medappapi_appointment`.`date` >= current_month_start AND `medappapi_appointment`.`date` < next_month_start
+    # GROUP BY `auth_user`.`first_name`, `auth_user`.`last_name`;
     doctors_appoitment_counts = Appointment.objects.filter(
         date__gte=current_month_start,
         date__lt=next_month_start
@@ -522,8 +558,16 @@ def total_patient_registrations(request):
     last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
     last_month_end = current_month_start - timedelta(days=1)
 
+    # SQL Equivalent:
+    # SELECT COUNT(*) FROM `medicalapp`.`medappapi_patient` 
+    # JOIN `medicalapp`.`auth_user` ON `medappapi_patient`.`user_id` = `auth_user`.`id`
+    # WHERE `auth_user`.`date_joined` >= current_month_start;
     current_month_patients = Patient.objects.filter(user__date_joined__gte=current_month_start).count()
 
+    # SQL Equivalent:
+    # SELECT COUNT(*) FROM `medicalapp`.`medappapi_patient` 
+    # JOIN `medicalapp`.`auth_user` ON `medappapi_patient`.`user_id` = `auth_user`.`id`
+    # WHERE `auth_user`.`date_joined` >= last_month_start AND `auth_user`.`date_joined` < current_month_start;
     last_month_patients = Patient.objects.filter(user__date_joined__gte=last_month_start, user__date_joined__lt=current_month_start).count()
 
     return Response({
@@ -552,6 +596,7 @@ def todays_appointment_distribution(request):
 
     for slot in time_slots:
         next_slot = (datetime.combine(today, slot) + interval).time()
+        # SQL Equivalent: SELECT COUNT(*) FROM `medicalapp`.`medappapi_appointment` WHERE `date` = today AND `time` >= slot AND `time` < next_slot;
         count = Appointment.objects.filter(date=today, time__gte=slot, time__lt=next_slot).count()
         distribution.append({
             "time": slot.strftime("%H:%M"),

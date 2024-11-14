@@ -15,13 +15,14 @@ class AuthPatientRegistrationSerializer(RegisterSerializer):
     zipcode = serializers.CharField(max_length=15)
     date_of_birth = serializers.DateField(required=True)
 
-
     def validate_username(self, username):
+        # SQL Equivalent: SELECT EXISTS (SELECT 1 FROM `medicalapp`.`auth_user` WHERE `auth_user`.`username` = username);
         if User.objects.filter(username=username).exists():
             raise serializers.ValidationError("A user with this username already exists.")
         return username
 
     def validate_email(self, email):
+        # SQL Equivalent: SELECT EXISTS (SELECT 1 FROM `medicalapp`.`auth_user` WHERE `auth_user`.`username` = username);
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError("A user with this email already exists.")
         return email
@@ -30,12 +31,19 @@ class AuthPatientRegistrationSerializer(RegisterSerializer):
         # Set user's first and last name
         user.first_name = self.validated_data['first_name']
         user.last_name = self.validated_data['last_name']
+        # SQL Equivalent for user Creation:
+        # INSERT INTO `medicalapp`.`auth_user` (`first_name`, `last_name`, `username`, `email`, `password`)
+        # VALUES (validated_data['first_name'], validated_data['last_name'], validated_data['username'], validated_data['email'], validated_data['password']);
         user.save()
 
         # Create the profile with role
+        # SQL Equivalent: # INSERT INTO `medicalapp`.`medappapi_userprofile` (`user_id`, `role`) VALUES (user.id, 'PATIENT');
         UserProfile.objects.create(user=user, role='PATIENT')
 
         # Create the patient model instance
+        # SQL Equivalent for Patient Creation:
+        # INSERT INTO `medicalapp`.`medappapi_patient` (`phone`, `address`, `city`, `state`, `zipcode`, `user_id`, `date_of_birth`) 
+        # VALUES (validated_data[phone], validated_data[address], validated_data[city], validated_data[state], validated_data[zipcode], user.id, validated_data[date_of_birth]);
         Patient.objects.create(
             user=user,
             phone=self.validated_data['phone'],
@@ -65,13 +73,19 @@ class AuthDoctorRegistrationSerializer(RegisterSerializer):
         # Set the user's first and last name
         user.first_name = self.validated_data['first_name']
         user.last_name = self.validated_data['last_name']
+        # SQL Equivalent for user Creation:
+        # INSERT INTO `medicalapp`.`auth_user` (`first_name`, `last_name`, `username`, `email`, `password`)
+        # VALUES (validated_data['first_name'], validated_data['last_name'], validated_data['username'], validated_data['email'], validated_data['password']);
         user.save()
 
         # Create a UserProfile for role management
+        # SQL Equivalent: # INSERT INTO `medicalapp`.`medappapi_userprofile` (`user_id`, `role`) VALUES (user.id, 'DOCTOR');
         UserProfile.objects.create(user=user, role='DOCTOR')
 
         # Create a Doctor instance
-        
+        # SQL Equivalent for Doctor Creation:
+        # INSERT INTO `medicalapp`.`medappapi_doctor` (`phone`, `specialization`, `address`, `city`, `state`, `zipcode`, `bio`, `short_bio`, `years_experience`, `user_id`) 
+        # VALUES (validated_data[phone], validated_data[specialization], validated_data[address], validated_data[city], validated_data[state], validated_data[zipcode], validated_data[bio], validated_data[short_bio], validated_data[years_experience], user.id);
         Doctor.objects.create(
             user=user,
             phone=self.validated_data['phone'],
@@ -97,12 +111,19 @@ class AuthAdminStaffRegistrationSerializer(RegisterSerializer):
         # Set the user's first and last name
         user.first_name = self.validated_data['first_name']
         user.last_name = self.validated_data['last_name']
+        # SQL Equivalent for user Creation:
+        # INSERT INTO `medicalapp`.`auth_user` (`first_name`, `last_name`, `username`, `email`, `password`)
+        # VALUES (validated_data['first_name'], validated_data['last_name'], validated_data['username'], validated_data['email'], validated_data['password']);
         user.save()
 
         # Create a UserProfile for role management
+        # SQL Equivalent: # INSERT INTO `medicalapp`.`medappapi_userprofile` (`user_id`, `role`) VALUES (user.id, 'ADMIN');
         UserProfile.objects.create(user=user, role='ADMIN')
 
         # Create an AdminStaff instance
+        # SQL Equivalent for Admin Creation:
+        # INSERT INTO `medicalapp`.`medappapi_adminstaff` (`title`, `user_id`) 
+        # VALUES (validated_data[title], user.id);
         AdminStaff.objects.create(
             user=user,
             title=self.validated_data['title'],
@@ -130,6 +151,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         time = data.get('time')
 
         # Check if there's already an appointment for the doctor at the same date and time
+        # SQL Equivalent: SELECT EXISTS (SELECT 1 FROM `medicalapp`.`medappapi_appointment` WHERE `doctor_id` = data.get('doctor') AND `date` = data.get('date') AND `time` = data.get('date'));
         if Appointment.objects.filter(doctor=doctor, date=date, time=time).exists():
             raise serializers.ValidationError("This time slot is already booked for the selected doctor.")
 
@@ -170,6 +192,12 @@ class ListPatientAppointmentSerializer(serializers.ModelSerializer):
             'time'
         ]
 
+    # SQL Equivalent:
+    # SELECT CONCAT(`auth_user`.`first_name`, ' ', `auth_user`.`last_name`) AS doctor_full_name
+    # FROM `medicalapp`.`medappapi_appointment`
+    # JOIN `medicalapp`.`medappapi_doctor` ON `medappapi_appointment`.`doctor_id` = `medappapi_doctor`.`id`
+    # JOIN `medicalapp`.`auth_user` ON `medappapi_doctor`.`user_id` = `auth_user`.`id`
+    # WHERE `medappapi_appointment`.`id` = appointment_id_value;
     def get_doctor_full_name(self, obj):
         return f"{obj.doctor.user.first_name} {obj.doctor.user.last_name}"
 
@@ -193,6 +221,12 @@ class ListDoctorAppointmentSerializer(serializers.ModelSerializer):
             'ai_summarized_symptoms',
         ]
 
+    # SQL Equivalent:
+    # SELECT CONCAT(`auth_user`.`first_name`, ' ', `auth_user`.`last_name`) AS patient_full_name
+    # FROM `medicalapp`.`medappapi_appointment`
+    # JOIN `medicalapp`.`medappapi_patient` ON `medappapi_appointment`.`patient_id` = `medappapi_patient`.`id`
+    # JOIN `medicalapp`.`auth_user` ON `medappapi_patient`.`user_id` = `auth_user`.`id`
+    # WHERE `medappapi_appointment`.`id` = appointment_id_value;
     def get_patient_full_name(self, obj):
         return f"{obj.patient.user.first_name} {obj.patient.user.last_name}"
 
