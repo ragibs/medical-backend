@@ -1,5 +1,27 @@
 # Ignore Virtual enviornment
 Virtual/
-
-# Ignore .env files
 .env
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# unit tests /coverage reports
+.cache
+.pytest_cache
+*.pyc
+pytestdebug.log
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/

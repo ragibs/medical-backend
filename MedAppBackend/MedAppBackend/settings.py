@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'dj_rest_auth.registration',
     'MedAppApi',
-    'corsheaders'
+    'corsheaders',
+    'allauth.socialaccount'
 ]
 
 SITE_ID = 1

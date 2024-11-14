@@ -1,172 +1,175 @@
 import pytest
+from datetime import datetime
 from django.contrib.auth.models import User
 from rest_framework.exceptions import ValidationError
+from rest_framework.test import APIRequestFactory
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.test import RequestFactory
 from MedAppApi.serializers import (
-    UserRegistrationSerializer, 
-    DoctorRegistrationSerializer, 
-    PatientRegistrationSerializer, 
-    AuthPatientRegistrationSerializer, 
-    AdminStaffRegistrationSerializer
+    AuthPatientRegistrationSerializer,
+    AuthDoctorRegistrationSerializer,
+    AuthAdminStaffRegistrationSerializer,
+    AppointmentSerializer
 )
-from MedAppApi.models import Doctor, Patient, AdminStaff, PatientDetails, Availability, Testimonials, Ratings
-
-@pytest.mark.django_db
-def test_user_registration_serializer():
-    data = {
-        "first_name": "John",
-        "last_name": "Doe",
-        "email": "john@example.com",
-        "username": "john_doe",
-        "password": "password123"
-    }
-    serializer = UserRegistrationSerializer(data=data)
-    assert serializer.is_valid()
-    user = serializer.save()
-    assert user.first_name == "John"
-    assert user.email == "john@example.com"
-    assert user.check_password("password123")
+from MedAppApi.models import UserProfile, Patient, Doctor, Appointment
 
 
-@pytest.mark.django_db
-def test_doctor_registration_serializer():
-    user_data = {
-        "first_name": "Dr. Jane",
-        "last_name": "Doe",
-        "email": "jane@example.com",
-        "username": "jane_doe",
-        "password": "password123"
-    }
-    doctor_data = {
-        "user": user_data,
-        "specialization": "Cardiology"
-    }
-    serializer = DoctorRegistrationSerializer(data=doctor_data)
-    assert serializer.is_valid()
-    doctor = serializer.save()
-    assert doctor.user.first_name == "Dr. Jane"
-    assert doctor.specialization == "Cardiology"
 
+# Sample data used in tests
+PATIENT_DATA = {
+    "first_name": "John",
+    "last_name": "Doe",
+    "username": "john_doe",
+    "email": "john@example.com",
+    "phone": "1234567890",
+    "address": "123 Main St",
+    "city": "Anytown",
+    "state": "State",
+    "zipcode": "12345",
+    "date_of_birth": "1990-01-01",
+    "password1": "Astrongpassword123!",
+    "password2": "Astrongpassword123!",
+}
 
-@pytest.mark.django_db
-def test_patient_registration_serializer():
-    user_data = {
-        "first_name": "Alice",
-        "last_name": "Smith",
-        "email": "alice@example.com",
-        "username": "alice_smith",
-        "password": "password123"
-    }
-    patient_data = {
-        "user": user_data,
-        "phone": "123-456-7890",
-        "address": "123 Main St",
-        "city": "Anytown",
-        "state": "CA",
-        "zipcode": "90210"
-    }
-    serializer = PatientRegistrationSerializer(data=patient_data)
-    assert serializer.is_valid()
-    patient = serializer.save()
-    assert patient.user.first_name == "Alice"
-    assert patient.phone == "123-456-7890"
+DOCTOR_DATA = {
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "username": "jane_smith",
+    "email": "jane@example.com",
+    "phone": "1234567890",
+    "specialization": "Cardiology",
+    "address": "456 Elm St",
+    "city": "Othertown",
+    "state": "State",
+    "zipcode": "54321",
+    "bio": "Experienced cardiologist",
+    "short_bio": "Cardiologist with 10+ years",
+    "years_experience": 12,
+    "password1": "Astrongpassword123!",
+    "password2": "Astrongpassword123!",
+}
 
 
 @pytest.mark.django_db
-def test_auth_patient_registration_serializer():
-    data = {
-        "username": "charlie_brown",
-        "email": "charlie@example.com",
-        "password1": "password123",
-        "password2": "password123",
-        "first_name": "Charlie",
-        "last_name": "Brown",
-        "phone": "987-654-3210",
-        "address": "456 Elm St",
-        "city": "Hometown",
-        "state": "NY",
-        "zipcode": "10001"
-    }
-    serializer = AuthPatientRegistrationSerializer(data=data)
-    assert serializer.is_valid()
-    user = serializer.save(request=None)
-    assert user.first_name == "Charlie"
+def test_patient_registration_serializer(user_factory):
+    factory = RequestFactory()
+    request = factory.post('/register/patient/')
+    
+    # Add session to the request
+    middleware = SessionMiddleware(lambda req: None)
+    middleware.process_request(request)
+    request.session.save()
+
+    # Instantiate the serializer with the context including the session-enabled request
+    serializer = AuthPatientRegistrationSerializer(data=PATIENT_DATA, context={'request': request})
+    assert serializer.is_valid(), serializer.errors
+
+    # Save the serializer with the request
+    user = serializer.save(request=request)
+
+    assert user.userprofile.role == 'PATIENT'
     assert Patient.objects.filter(user=user).exists()
-    assert Patient.objects.get(user=user).phone == "987-654-3210"
+    assert Patient.objects.get(user=user).phone == PATIENT_DATA['phone']
 
 
 @pytest.mark.django_db
-def test_admin_staff_registration_serializer():
-    user_data = {
-        "first_name": "Admin",
-        "last_name": "User",
-        "email": "admin@example.com",
-        "username": "admin_user",
-        "password": "admin123"
-    }
-    admin_data = {
-        "user": user_data,
-        "position": "Support"
-    }
-    serializer = AdminStaffRegistrationSerializer(data=admin_data)
-    assert serializer.is_valid()
-    admin_staff = serializer.save()
-    assert admin_staff.user.first_name == "Admin"
-    assert admin_staff.position == "Support"
+def test_doctor_registration_serializer(user_factory, rf):
+    factory = RequestFactory()
+    request = factory.post('register/doctor/')
+
+     # Add session to the request
+    middleware = SessionMiddleware(lambda req: None)
+    middleware.process_request(request)
+    request.session.save()
+    
+    serializer = AuthDoctorRegistrationSerializer(data=DOCTOR_DATA, context={'request': request})
+    assert serializer.is_valid(), serializer.errors
+    
+    user = serializer.save(request=request)
+
+        
+     
+    assert user.userprofile.role == 'DOCTOR'
+    # assert Doctor.objects.filter(user=user).exists()
+    doctor = Doctor.objects.get(user=user)
+    assert doctor.specialization == DOCTOR_DATA['specialization']
+    assert doctor.years_experience == DOCTOR_DATA['years_experience']
 
 
 @pytest.mark.django_db
-def test_invalid_user_registration_serializer():
-    # Test with missing required fields
-    data = {
-        "first_name": "Incomplete",
-        "email": "incomplete@example.com"
-        # Missing 'username' and 'password'
+def test_adminstaff_registration_serializer(user_factory, rf):
+    
+    factory = RequestFactory() 
+    request = factory.post('/register/adminstaff/')
+
+     # Add session to the request
+    middleware = SessionMiddleware(lambda req: None)
+    middleware.process_request(request)
+    request.session.save()
+
+    serializer = AuthAdminStaffRegistrationSerializer(
+        data={
+            "first_name": "Alice",
+            "last_name": "Johnson",
+            "username": "alice_admin",
+            "email": "alice@example.com",
+            "title": "Office Manager",
+            "password1": "Astrongpassword123!",
+            "password2": "Astrongpassword123!",
+        }
+    )
+    assert serializer.is_valid(), serializer.errors
+       
+    # Save the serializer with the request object 
+    admin_user = serializer.save(request=request)
+    
+    assert UserProfile.objects.get(user=admin_user).role == "ADMIN"
+    assert admin_user.adminstaff.title == "Office Manager"
+
+
+@pytest.mark.django_db
+def test_appointment_serializer_validation(appointment_factory, doctor_factory, patient_factory):
+    doctor = doctor_factory()
+    patient = patient_factory()
+    appointment_data = {
+        "doctor": doctor.pk,
+        "patient": patient.pk,
+        "date": "2024-11-10",
+        "time": "14:00:00",
+        "symptoms": "Mild chest pain"
     }
-    serializer = UserRegistrationSerializer(data=data)
-    with pytest.raises(ValidationError):
+    
+    
+    serializer = AppointmentSerializer(data=appointment_data)
+    assert serializer.is_valid(), serializer.errors
+    appointment = serializer.save()
+    
+    assert appointment.date == datetime.strptime("2024-11-10", "%Y-%m-%d").date()
+    assert appointment.time.strftime("%H:%M:%S") == "14:00:00"
+    assert appointment.symptoms == "Mild chest pain"
+
+
+@pytest.mark.django_db
+def test_appointment_double_booking_validation(appointment_factory, doctor_factory, patient_factory):
+    doctor = doctor_factory()
+    patient = patient_factory()
+    
+    # Create an existing appointment at the same time
+    appointment_factory(doctor=doctor, patient = patient,  date="2024-11-10", time="14:00:00")
+    
+    appointment_data = {
+        "doctor": doctor.pk,
+        "patient": patient.pk,
+        "date": "2024-11-10",
+        "time": "14:00:00",
+        "symptoms": "Headache"
+    }
+    
+    serializer = AppointmentSerializer(data=appointment_data)
+    with pytest.raises(ValidationError) as exc_info:
         serializer.is_valid(raise_exception=True)
+    
+    assert "This time slot is already booked for the selected doctor." in str(exc_info.value)
 
 
-@pytest.mark.django_db
-def test_patient_details_serializer():
-    patient = Patient.objects.create(
-        user=User.objects.create_user(username="test_patient", password="password123"),
-        phone="111-222-3333",
-        address="789 Maple St",
-        city="Big City",
-        state="TX",
-        zipcode="75001"
-    )
-    serializer = PatientDetailsSerializer(patient)
-    assert serializer.data["phone"] == "111-222-3333"
 
-
-@pytest.mark.django_db
-def test_availability_serializer():
-    availability = Availability.objects.create(
-        day="Monday",
-        start_time="09:00",
-        end_time="17:00"
-    )
-    serializer = AvailabilitySerializer(availability)
-    assert serializer.data["day"] == "Monday"
-
-
-@pytest.mark.django_db
-def test_testimonials_serializer():
-    testimonial = Testimonials.objects.create(
-        user=User.objects.create_user(username="user_testimonial", password="password123"),
-        message="Great service!"
-    )
-    serializer = TestimonialsSerializer(testimonial)
-    assert serializer.data["message"] == "Great service!"
-
-
-@pytest.mark.django_db
-def test_ratings_serializer():
-    rating = Ratings.objects.create(
-        user=User.objects.create_user(username="user_rating", password="password123"),
-        rating=5
-    )
-    serializer = RatingsSerializer(rating)
-    assert serializer.data["rating"] == 5

@@ -1,0 +1,9 @@
+Navigate to the root folder where you have the requirements and run "pip install -r requirements.txt"
+
+Navigate to the MedAppApi folder
+run pytest
+Green dots indicate tests passed, red F or E indicates tests failed or errors.
+
+# To see the code coverage tests
+run coverage run manage.py test
+run coverage.html and clink on the link to see the results.
