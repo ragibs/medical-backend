@@ -24,8 +24,10 @@ def create_admin_staff(data):
         first_name=data["first_name"],
         last_name=data["last_name"]
     )
-    
-    UserProfile.objects.create(user=user, role='ADMIN')
+
+    user_profile, created = UserProfile.objects.get_or_create(user=user)
+    user_profile.role = 'ADMIN'
+    user_profile.save()
 
     AdminStaff.objects.create(
         user=user,
