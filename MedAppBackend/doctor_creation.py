@@ -166,7 +166,23 @@ doctors = [
         "bio": "Dr. Karen Nguyen is an endocrinologist with 7 years of experience, focusing on hormone-related conditions like diabetes and thyroid disorders. She previously worked at Massachusetts Endocrine Center.",
         "short_bio": "Endocrinologist with 7 years experience",
         "years_experience": 7
-    }
+    },
+    {
+    "username": "dr_alexmartin",
+    "email": "alexmartin@example.com",
+    "password": "securepassword123",
+    "first_name": "Alex",
+    "last_name": "Martin",
+    "phone": "212-555-2222",
+    "specialization": "General Practice",
+    "address": "555 Health Blvd",
+    "city": "New York",
+    "state": "NY",
+    "zipcode": "10011",
+    "bio": "Dr. Alex Martin is a General Practitioner with 10 years of experience in providing comprehensive primary care. He is skilled in diagnosing and managing a wide range of conditions and is dedicated to preventive healthcare.",
+    "short_bio": "General Practitioner with 10 years experience",
+    "years_experience": 10
+}
 ]
 
 for doctor_data in doctors:
