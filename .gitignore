@@ -25,3 +25,16 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+
+# Ignore all __pycache__ directories and their contents
+__pycache__/
+
+
+# Ignore specific .pyc files in tests/__pycache__
+tests/__pycache__/*.pyc
+
+# Add other files or directories that should be ignored
+# For example:
+# config.py
+# .env
+# build/
