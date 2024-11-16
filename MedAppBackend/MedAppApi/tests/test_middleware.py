@@ -105,7 +105,6 @@ def test_logging_middleware_invalid_json(user_factory):
     # Validate that invalid JSON data was handled and logged correctly
     log_entry = UserActionLog.objects.last()
     assert log_entry.user == user
-    # assert log_entry.action_type == 'EXCEPTION'  # Assuming the middleware logs this as an exception
     assert log_entry.endpoint == '/register/patient/'
     assert log_entry.status_code == response.status_code
     assert log_entry.outcome == 'FAIL'
