@@ -90,7 +90,7 @@ def test_doctor_registration_serializer(user_factory, rf):
         
      
     assert user.userprofile.role == 'DOCTOR'
-    # assert Doctor.objects.filter(user=user).exists()
+    assert Doctor.objects.filter(user=user).exists()
     doctor = Doctor.objects.get(user=user)
     assert doctor.specialization == DOCTOR_DATA['specialization']
     assert doctor.years_experience == DOCTOR_DATA['years_experience']

@@ -1,6 +1,7 @@
 import pytest
 from django.utils import timezone
 from datetime import date, time
+from django.contrib.auth.models import User
 
 
 @pytest.mark.django_db

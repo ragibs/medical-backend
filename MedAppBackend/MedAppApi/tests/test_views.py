@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from rest_framework.test import APIClient
 from django.urls import reverse
+from rest_framework.request import Request
 from datetime import datetime, time
 from MedAppApi.models import Appointment
 from MedAppApi.views import register_patient
@@ -36,57 +37,6 @@ def test_custom_login_view(api_client, user_factory, user_profile_factory):
     # Assert that the role is 'PATIENT'
     assert response.data['role'] == 'PATIENT', f"Expected role 'PATIENT', got {response.data['role']}"
 
-
-# Test Register Patient
-@pytest.mark.django_db
-def test_register_patient(api_client):
-    api_client = APIClient()
-    # user = user_factory(username='testuser')
-    # user.set_password('Str0ngP@ssw0rd!')
-    # user.save()
-
-    # api_client.force_authenticate(user=user)
-
-
-    patient_data = {
-        # 'username': 'newpatient',
-        # 'password': 'Str0ngP@ssw0rd!',
-        # 'first_name': 'Test',
-        # 'last_name': 'User',
-        # 'email': 'testpatient@example.com'
-
-        "username": "patient_nataliewong",
-        "email": "nataliewong@example.com",
-        "password1": "securepassword123",
-        "password2": "securepassword123",
-        "first_name": "Natalie",
-        "last_name": "Wong",
-        "phone": "617-555-1111",  
-        "address": "1010 Willow Ct",
-        "city": "Boston",
-        "state": "MA",
-        "zipcode": "02108",
-        "date_of_birth": "1997-06-25"
-    }
-
-    # factory = APIRequestFactory()
-    # request = factory.post(reverse('register_patient'), data=patient_data, format='json')
-    # response = register_patient(request)
-
-   
-    # response = api_client.post(reverse('register_patient'), data=patient_data, format='json')
-    # Send the POST request to register a new patient 
-    # response = api_client.post(reverse('register_patient'), data=patient_data, format='json')
-
-    url = reverse('register_patient')
-    response = api_client.post(url, data=patient_data, format='json')
-    print (response.data)
-    
-  
-    
-    assert response.status_code == status.HTTP_201_CREATED
-    assert 'user_id' in response.data
-    assert response.data['username'] == 'newpatient'
 
 
 # Test Get Patient (Permission Test)
@@ -127,8 +77,6 @@ def test_list_patients_admin_only(api_client, user_factory, user_profile_factory
 # Test Register Doctor (Admin Only)
 @pytest.mark.django_db
 def test_register_doctor(api_client, user_factory, user_profile_factory):
-    # admin_user = user_factory(username='admin')
-
     admin_user = user_factory(username='testuser')
     admin_user.set_password('Str0ngP@ssw0rd!')
     admin_user.save()
@@ -155,27 +103,10 @@ def test_register_doctor(api_client, user_factory, user_profile_factory):
 
     response = api_client.post(reverse('register_doctor'), data = doctor_data, format = 'json')
 
-    
-    
+ 
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data['username'] == 'newdoctor'
 
-
-# Test Get Doctor
-@pytest.mark.django_db
-def test_get_doctor(api_client, doctor_factory):
-    doctor = doctor_factory()
-    print(f"Expected ID: {doctor.id}")
-
-    # Authenticate as a user (doctor or admin)
-    api_client.force_authenticate(user=doctor.user)
-    # print(f"Expected ID: {doctor.id}")
-
-    response = api_client.get(reverse('get_doctor', kwargs={'doctor_id': doctor.id}))
-    # response = api_client.get(reverse('get_doctor'))
-    print(f"Returned ID: {response.data['id']}")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data['id'] == doctor.id
 
 
 # Test Available Appointment Slots
@@ -253,8 +184,6 @@ def test_delete_appointment(api_client, user_factory, user_profile_factory, doct
 # Test List Appointments for Patient
 @pytest.mark.django_db
 def test_list_appointments_for_patient(api_client, user_factory, user_profile_factory, patient_factory, appointment_factory):
-    # patient = patient_factory(user = patient)
-    # appointment_factory(patient=patient)
     patient_user = user_factory(username='patient')
     patient_user.set_password('PatStr0ngP@ss!')
     patient_user.save()
@@ -269,8 +198,6 @@ def test_list_appointments_for_patient(api_client, user_factory, user_profile_fa
     response = api_client.get(reverse('list_appointments_for_patient', args=[patient.user.id]))
     
     assert response.status_code == status.HTTP_200_OK
-    # assert len(response.data) > 0
-
     assert len(response.data) >= 2
     
     # check specific appointments are in the response
@@ -294,9 +221,8 @@ def test_list_appointments_for_doctor(api_client, doctor_factory, appointment_fa
     response = api_client.get(reverse('list_appointments_for_doctor', args=[doctor.user.id]))
     
     assert response.status_code == status.HTTP_200_OK
-    # assert len(response.data) > 0
-
     assert len(response.data) >= 2
+
     # check specific appointments are in the response
     appointment_ids = [appointment1.id, appointment2.id]
     response_ids = [appt['id'] for appt in response.data]

@@ -62,3 +62,6 @@ class UserActionLog(models.Model):
     details = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
+
+# Temporary code to view all users in the test database. Should be erased later on.
+print(User.objects.all()) 
