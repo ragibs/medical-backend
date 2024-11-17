@@ -63,8 +63,10 @@ def send_email(user):
         # SQL Equivalent: SELECT `email` FROM `medicalapp`.`auth_user` WHERE `id` = user.id;
         to=[user.email]
     )
-
-    message.send()
+    try:
+        message.send()
+    except Exception:
+        pass
 
 # POST Add Paitent/ Register Paitent
 @api_view(['POST'])
