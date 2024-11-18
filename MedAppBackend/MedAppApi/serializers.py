@@ -151,7 +151,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         time = data.get('time')
 
         # Check if there's already an appointment for the doctor at the same date and time
-        # SQL Equivalent: SELECT EXISTS (SELECT 1 FROM `medicalapp`.`medappapi_appointment` WHERE `doctor_id` = data.get('doctor') AND `date` = data.get('date') AND `time` = data.get('date'));
+        # SQL Equivalent: SELECT EXISTS (SELECT 1 FROM `medicalapp`.`medappapi_appointment` WHERE `doctor_id` = data.get('doctor') AND `date` = data.get('date') AND `time` = data.get('time'));
         if Appointment.objects.filter(doctor=doctor, date=date, time=time).exists():
             raise serializers.ValidationError("This time slot is already booked for the selected doctor.")
 
@@ -196,7 +196,7 @@ class ListPatientAppointmentSerializer(serializers.ModelSerializer):
     # FROM `medicalapp`.`medappapi_appointment`
     # JOIN `medicalapp`.`medappapi_doctor` ON `medappapi_appointment`.`doctor_id` = `medappapi_doctor`.`id`
     # JOIN `medicalapp`.`auth_user` ON `medappapi_doctor`.`user_id` = `auth_user`.`id`
-    # WHERE `medappapi_appointment`.`id` = appointment_id_value;
+    # WHERE `medappapi_appointment`.`id` = obj.id;
     def get_doctor_full_name(self, obj):
         return f"{obj.doctor.user.first_name} {obj.doctor.user.last_name}"
 
@@ -225,7 +225,7 @@ class ListDoctorAppointmentSerializer(serializers.ModelSerializer):
     # FROM `medicalapp`.`medappapi_appointment`
     # JOIN `medicalapp`.`medappapi_patient` ON `medappapi_appointment`.`patient_id` = `medappapi_patient`.`id`
     # JOIN `medicalapp`.`auth_user` ON `medappapi_patient`.`user_id` = `auth_user`.`id`
-    # WHERE `medappapi_appointment`.`id` = appointment_id_value;
+    # WHERE `medappapi_appointment`.`id` = obj.id;
     def get_patient_full_name(self, obj):
         return f"{obj.patient.user.first_name} {obj.patient.user.last_name}"
 

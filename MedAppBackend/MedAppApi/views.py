@@ -272,7 +272,7 @@ def make_appointment(request):
     
     if user.userprofile.role == 'PATIENT':
         try:
-            # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_patient` WHERE `user_id` = user_id;
+            # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_patient` WHERE `user_id` = user.id;
             patient = Patient.objects.get(user=user)
         except Patient.DoesNotExist:
             return Response('Patient record not found', status=status.HTTP_400_BAD_REQUEST)
@@ -374,7 +374,7 @@ def list_appointments_for_patient(request, user_id):
     if request.user != patient.user and (not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'ADMIN'):
         return Response('You can only view your own appointments', status=status.HTTP_403_FORBIDDEN)
 
-    # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `patient_id` = patient_id ORDER BY `date`, `time`;
+    # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `patient_id` = patient.id ORDER BY `date`, `time`;
     appointments = Appointment.objects.filter(patient=patient).order_by('date', 'time')
     serializer = ListPatientAppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
@@ -397,7 +397,7 @@ def list_appointments_for_doctor(request, user_id):
     if request.user != doctor.user and (not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'ADMIN'):
         return Response('You can only view your own appointments', status=status.HTTP_403_FORBIDDEN)
 
-    # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `doctor_id` = doctor_id ORDER BY `date`, `time`;
+    # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `doctor_id` = doctor.id ORDER BY `date`, `time`;
     appointments = Appointment.objects.filter(doctor=doctor).order_by('date', 'time')
     serializer = ListDoctorAppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
@@ -412,7 +412,7 @@ def view_all_appointments(request):
     """
 
     try:
-        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_userprofile` WHERE `user_id` = user_id;
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_userprofile` WHERE `user_id` = user.id;
         user_profile = UserProfile.objects.get(user=request.user)
     except UserProfile.DoesNotExist:
         return Response({"detail": "User profile not found."}, status=status.HTTP_403_FORBIDDEN)
@@ -437,13 +437,13 @@ def add_appointment_notes(request, appointment_id):
     user = request.user
 
     try:
-        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_doctor` WHERE `user_id` = user_id;
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_doctor` WHERE `user_id` = user.id;
         doctor = Doctor.objects.get(user=user)
     except Doctor.DoesNotExist:
         return Response({'detail': 'Only doctors can add notes to appointments.'}, status=status.HTTP_403_FORBIDDEN)
 
     try:
-        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `id` = appointment_id AND `doctor_id` = doctor_id;
+        # SQL Equivalent: SELECT * FROM `medicalapp`.`medappapi_appointment` WHERE `id` = appointment_id AND `doctor_id` = doctor.id;
         appointment = Appointment.objects.get(id=appointment_id, doctor=doctor)
     except Appointment.DoesNotExist:
         return Response({'detail': 'Appointment not found or you do not have permission to modify it.'}, status=status.HTTP_404_NOT_FOUND)
