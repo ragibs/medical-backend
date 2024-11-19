@@ -50,10 +50,6 @@ def test_logging_middleware_get_request(user_factory):
     assert log_entry.action_type == 'VIEW'
 
 
-    # We need to check why the slash is being removed from the Middleware Action Logging code
-    # assert log_entry.endpoint == 'register/patient/'**** 
-
-
     assert log_entry.endpoint == '/registerpatient/'
     assert log_entry.status_code == 200
     assert log_entry.outcome == 'PASS'
