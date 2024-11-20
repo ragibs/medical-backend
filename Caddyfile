@@ -1,0 +1,4 @@
+med-app.ca {
+    reverse_proxy http://backend:8000
+}
+

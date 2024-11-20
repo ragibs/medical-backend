@@ -1,0 +1,72 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: ./medical-frontend          
+      dockerfile: Dockerfile        
+    ports:
+      - "3000:3000"                 
+    environment:
+      - NEXT_PUBLIC_API_URL=http://54.245.126.177:8000  
+    depends_on:
+      - backend                     
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./medical-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - app-network
+    env_file:
+      - .env
+    volumes:
+      - ./medical-backend:/app
+    command: > 
+      sh -c "./wait-for-it.sh db:3306 -- 
+             python manage.py makemigrations &&
+             python manage.py migrate &&
+             python doctor_creation.py &&
+             python patient_creation.py &&
+             python admin_creation.py &&
+             python appointment_creation.py &&
+             python manage.py runserver 0.0.0.0:8000"
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    networks:
+      - app-network  
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config      
+volumes:
+  db_data:
+  caddy_data:  
+  caddy_config:  
+
+networks:
+  app-network:
