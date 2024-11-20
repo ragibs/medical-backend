@@ -64,7 +64,10 @@ def send_email(user):
         to=[user.email]
     )
 
-    message.send()
+    try:
+        message.send()
+    except Exception:
+        pass
 
 # POST Add Paitent/ Register Paitent
 @api_view(['POST'])
@@ -351,7 +354,7 @@ def delete_appointment(request, appointment_id):
     
     # SQL Equivalent: DELETE FROM `medicalapp`.`medappapi_appointment` WHERE `id` = appointment_id;
     appointment.delete()
-    return Response({"detail": "Appointment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    return Response({"detail": "Appointment deleted successfully."}, status=status.HTTP_200_OK)
 
 
 # GET List of appointments by Patient ID
