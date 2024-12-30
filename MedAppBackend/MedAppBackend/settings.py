@@ -34,7 +34,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     '23.17.49.58',  # Ubuntu server IP
@@ -90,25 +90,6 @@ CSRF_TRUSTED_ORIGINS = [
 
 ROOT_URLCONF = 'MedAppBackend.urls'
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-        'corsheaders': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-    },
-}
 
 TEMPLATES = [
     {

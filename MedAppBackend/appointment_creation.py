@@ -43,15 +43,15 @@ symptoms_list = [
 ]
 
 # Function to generate appointments within the specified date range
-def generate_appointments(num_appointments=20):
+def generate_appointments(num_appointments=40):
     appointments = []
-    start_date = datetime(2024, 11, 20)
-    end_date = datetime(2024, 12, 5)
+    start_date = datetime(2025, 1, 20)
+    end_date = datetime(2025, 12, 5)
 
     for _ in range(num_appointments):
         patient = random.choice(patients)
         doctor = random.choice(doctors)
-        
+
         # Generate random date between November 20th and December 5th
         appointment_date = start_date + timedelta(days=random.randint(0, (end_date - start_date).days))
         # Generate random time between 9 AM to 5 PM
