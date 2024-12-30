@@ -15,13 +15,13 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy the requirements file
-COPY MedAppBackend/requirements.txt /app/
+COPY requirements.txt ./
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire application directory
-COPY MedAppBackend /app/
+COPY . .
 
 # Expose the port the Django development server will run on
 EXPOSE 8000
