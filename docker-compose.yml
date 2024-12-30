@@ -7,14 +7,11 @@ services:
       dockerfile: Dockerfile
     container_name: django_app
     ports:
-      - "8001:8000"
+      - "8001:8000" # Expose Django's development server on port 8001
     volumes:
-      - .:/app
+      - .:/app # Mount the local project directory inside the container
     env_file:
-      # - .env
+      - ./MedAppBackend/.env # Load environment variables from the .env file
     command: >
       sh -c "python manage.py migrate &&
-             gunicorn -b 0.0.0.0:8000 MedAppBackend.wsgi:application"
-
-volumes:
-  db_data:
+             python manage.py runserver 0.0.0.0:8000"

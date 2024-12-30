@@ -169,8 +169,8 @@ SIMPLE_JWT = {
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    '23.17.49.58', #ubuntu server ip
-    '127.0.0.1', # Localhost for internal requests
+    'https://23.17.49.58', #ubuntu server ip
+    'https://127.0.0.1', # Localhost for internal requests
     'http://localhost:3000',  # localhost frontend
     'https://medical-frontend-kappa.vercel.app'  # vercel frontend
 ]
