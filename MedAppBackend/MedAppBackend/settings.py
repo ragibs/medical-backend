@@ -11,15 +11,17 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 import os
 from datetime import timedelta
 
 
 # Loading Enviornment Variables
-# this line indicates the .env file is found in a folder named 'Virtual' that is one directory up from where your script is running.
-env_path = os.path.join('..', 'Virtual', '.env') # this line indicates the .env file is found in a folder named 'Virtual' that is one directory up from where your script is running.
-secrets = dotenv_values(env_path)
+BASE_DIR = Path(__file__).resolve().parent.parent
+env_file = os.path.join(BASE_DIR, '.env')
+load_dotenv(env_file)
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +31,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--q-3*@^mfm@!5a&e_2!msd(sm$=w%xl*v*^=4w^p5hd3m9nam('
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -79,7 +81,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'email/templates')],
         'APP_DIRS': True,
-        
+
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -100,11 +102,11 @@ WSGI_APPLICATION = 'MedAppBackend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': secrets['DB_NAME'],
-        'USER': secrets['SQL_USERNAME'],
-        'PASSWORD': secrets['SQL_PASSWORD'],
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('SQL_USERNAME'),
+        'PASSWORD': os.getenv('SQL_PASSWORD'),
+        'HOST': os.getenv('SQL_HOST'),
+        'PORT': os.getenv('SQL_PORT'),
     }
 }
 
@@ -152,7 +154,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_AUTH = {
     'USE_JWT': True,
-    'JWT_AUTH_COOKIE': 'medappapi_access_token',  
+    'JWT_AUTH_COOKIE': 'medappapi_access_token',
 }
 
 REST_FRAMEWORK = {
@@ -162,13 +164,13 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
 }
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',  # localhost frontend
-    'https://medical-frontend-kappa.vercel.app/'  # vercel frontend
+    'https://medical-frontend-kappa.vercel.app'  # vercel frontend
 ]
 CORS_ALLOW_HEADERS = [
     'authorization',
@@ -185,11 +187,11 @@ CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = secrets['EMAIL_HOST_USER']
-EMAIL_HOST_PASSWORD = secrets['EMAIL_HOST_PASSWORD']
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-DEFAULT_FROM_EMAIL = secrets['EMAIL_HOST_USER']
+DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
 # Adding Pictures with emails
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'email/images')]

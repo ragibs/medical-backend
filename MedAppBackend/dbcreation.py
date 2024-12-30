@@ -1,19 +1,16 @@
-# Install Mysql on your computer
-# https://dev.mysql.com/downloads/installer/
-# pip install mysql
-# pip install mysql-connector
-# pip install mysql-connector-python 
-
 import mysql.connector
 from dotenv import dotenv_values
 import os
+from urllib.parse import urlparse
+
 
 # Loading Enviornment Variables
 env_path = os.path.join('..', 'Virtual', '.env')
 secrets = dotenv_values(env_path)
 
 dataBase = mysql.connector.connect(
-    host = 'localhost',
+    host = secrets['SQL_HOST'],
+    port= secrets['SQL_PORT'],
     user = secrets['SQL_USERNAME'],
     passwd = secrets['SQL_PASSWORD']
 )
