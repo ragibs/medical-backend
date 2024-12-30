@@ -3,3 +3,5 @@ Virtual/
 
 # Ignore .env files
 .env
+
+venv
