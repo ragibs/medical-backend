@@ -36,7 +36,13 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '23.17.49.58',  # Ubuntu server IP
+    '127.0.0.1',  # Localhost
+    'localhost',  # Localhost for frontend
+    'medical-frontend-kappa.vercel.app',  # Vercel frontend
+    'medical-server.houseofmubina.com',  # Backend server hostname
+]
 
 
 # Application definition
@@ -62,6 +68,7 @@ INSTALLED_APPS = [
 SITE_ID = 1
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -70,8 +77,15 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'MedAppApi.middleware.ActionLoggingMiddleware'
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://23.17.49.58',
+    'https://127.0.0.1',
+    'http://localhost:3000',
+    'https://medical-frontend-kappa.vercel.app',
+    'https://medical-server.houseofmubina.com'
 ]
 
 ROOT_URLCONF = 'MedAppBackend.urls'
@@ -197,7 +211,13 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOW_CREDENTIALS = True
-ALLOWED_HOSTS = ['*']
+CORS_ALLOWED_ORIGINS = [
+    'https://23.17.49.58', #ubuntu server ip
+    'https://127.0.0.1', # Localhost for internal requests
+    'http://localhost:3000',  # localhost frontend
+    'https://medical-frontend-kappa.vercel.app',  # vercel frontend
+    'https://medical-server.houseofmubina.com'
+]
 CORS_ALLOW_HEADERS = [
     'authorization',
     'content-type',
