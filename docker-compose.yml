@@ -11,26 +11,10 @@ services:
     volumes:
       - .:/app
     env_file:
-      # - ./MedAppBackend/.env
-    depends_on:
-      - db
+      # - .env
     command: >
       sh -c "python manage.py migrate &&
              gunicorn -b 0.0.0.0:8000 MedAppBackend.wsgi:application"
-
-  db:
-    image: mysql:8.0
-    container_name: mysql_db
-    restart: always
-    environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${SQL_USERNAME}
-      MYSQL_PASSWORD: ${SQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${SQL_PASSWORD}
-    ports:
-      - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql
 
 volumes:
   db_data:
